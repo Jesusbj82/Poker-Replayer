@@ -480,6 +480,9 @@ const $ = id => document.getElementById(id);
 const ALL_POSITIONS = ['utg','utg1','lj','hj','co','btn','sb','bb'];
 const SLOT_CLASSES = ['slot0','slot1','slot2','slot3','slot4','slot5','slot6','slot7'];
 
+// ═══ CONFIGURACIÓN — cambiar esta URL si se mueve el Worker ═══
+const API_URL = 'https://pokerreplayer.pokertopprous25.workers.dev/';
+
 // ══════════════════════════════════════════
 // FORM LOGIC
 // ══════════════════════════════════════════
@@ -626,6 +629,26 @@ HAND FORMAT EXAMPLES:
 "Q8ss Or 60 HJ paga SB 160 AJ9hh cb 100 paga 360 5 cb 400 paga 1160 5 Donk 500 all in 1600 paga tiene A3cc"
 = Hero has Q8ss, raises 60 from HJ. SB calls. Pot 160. Flop AJ9 (two hearts), cbet 100, call. Pot 360. Turn 5, cbet 400, call. Pot 1160. River 5, donk 500, all-in 1600, call. Villain has A3cc.
 
+"KQoROL 50 CO paga D Reg 120 J93dd xx A Delayed 75 paga Q xf a 300"
+= Hero has KQo (offsuit). There is a limper (UTG limps 10). Hero raises (ROL=raise over limper) to 50. CO is hero's position. BTN (villain, described as Reg) calls 50. Pot 120. Flop J-9-3 (two diamonds). Check-check. Turn A. Hero delayed cbet 75, villain calls. River Q. Hero check, villain bets 300, hero folds. Villain wins.
+
+PREFLOP SPECIAL ACTIONS:
+- "ROL" = Raise Over Limper. This means someone limped (called the BB) BEFORE hero raised. 
+- If the limper's position is NOT specified, always put the limper at UTG (earliest position)
+- A limper calls the BB amount (e.g. in 5/10, limper calls 10)
+- After ROL, the limper usually folds to the raise (unless text says otherwise)
+- "Or" / "open raise" = raise with NO limper before
+- "3bet" = re-raise after someone raised. "4bet" = re-re-raise.
+- "Def" / "defiende" = call a raise (typically from BB or SB)
+
+CARD FORMAT:
+- "KQo" = K and Q offsuit (different suits). Assign different suits like K♠Q♥
+- "KQs" = K and Q suited (same suit). Assign same suit like K♠Q♠
+- "88" = pocket pair 8-8 (always different suits, e.g. 8♠8♥)
+- "ATs" = A and T suited
+- "ATo" = A and T offsuit
+- When no "s" or "o" suffix and not a pair, default to offsuit
+
 POSITION PARSING:
 - "Or 35" or "open raise 35" or "abre 35" = hero raises
 - "Def" or "defiende" or "paga" or "call" = call
@@ -635,9 +658,10 @@ POSITION PARSING:
 
 ACTION PARSING:
 - "cb" / "cbet" / "c-bet" = continuation bet (action: "bet")
+- "Delayed" / "delayed cbet" / "delayed cb" = bet on a later street after checking the previous (action: "bet")
 - "xc" = check-call (two actions: check then call)
-- "xr" = check-raise (two actions: check then raise)
-- "xf" = check-fold (two actions: check then fold)
+- "xr" = check-raise (two actions: check then raise)  
+- "xf" / "xf a 300" = check-fold (hero checks, villain bets amount, hero folds). Generate THREE actions: hero check, villain bet [amount], hero fold
 - "xx" = check-check (both players check)
 - "Donk" / "donkea" = out-of-position bet (action: "bet")
 - "Betea" / "bet" / "apuesta" = bet
@@ -651,23 +675,30 @@ SUIT PARSING:
 - "K9hh" = K♥9♥ (both hearts)
 - "A3cc" = A♣3♣ (both clubs)
 - "Q8ss" = Q♠8♠ (both spades)
+- "KQo" = offsuit (different suits). "KQs" = suited (same suit)
 - If board suits not specified, assign different suits (rainbow)
-- Suit suffixes on board: "AJ9hh" = two of the three are hearts, third is different
+- BOARD suit suffixes: "J93dd" = TWO of the three flop cards are diamonds, third is different suit
+- "AJ9hh" = two of the three are hearts, third is different
 - "974" with no suit = rainbow (three different suits)
+- When assigning board suits, never reuse a suit that a player's hole cards already have unless specified
 
 PLAYER IDENTIFICATION:
 - Hero is always the one whose cards are shown first
-- If text says "Or 35" without position, hero's position comes from context
-- "Def BB" means BB is the villain defending
-- "Reg" before a position means that's a regular player (villain)
-- Include ALL 8 positions in preflop actions (utg,utg1,lj,hj,co,btn,sb,bb) — fold everyone not mentioned
+- Hero's position can be stated explicitly (e.g. "CO" after the hand) or inferred from context
+- If text says "Or 35" without position, hero's position comes from the form or context
+- "Def BB" means BB is defending/calling
+- "paga D" or "paga BTN" = BTN calls
+- "Reg" = regular player (villain). Descriptors like "Griego viejo Tight" describe the villain's profile but don't change the parsing
+- "D" alone can mean BTN (Dealer) position
+- Include ALL 8 positions in preflop actions (utg,utg1,lj,hj,co,btn,sb,bb) — fold everyone not explicitly mentioned as acting
+- If a limper is mentioned but position not specified, default to UTG
 
 WINNER DETECTION:
-- If villain shows cards and hero bet/called last = showdown
-- If hero folds = villain wins, no showdown
-- If villain folds = hero wins, no showdown
-- "tiene K9hh" = villain shows K9 hearts = showdown
-- Compare hands to determine winner
+- If villain shows cards and hero bet/called last = showdown, compare hands
+- If hero folds (including "xf") = villain wins, showdown: false
+- If villain folds = hero wins, showdown: false
+- "tiene K9hh" = villain shows K9 hearts = showdown: true
+- If no showdown, villain cards can still be null
 
 OUTPUT FORMAT:
 {
@@ -704,7 +735,7 @@ ${ante ? 'Ante: ' + ante : ''}
 Hand: ${handText}
 ${question ? 'Question: ' + question : ''}`;
 
-  const response = await fetch("https://pokerreplayer.pokertopprous25.workers.dev/", {
+  const response = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -1160,15 +1191,26 @@ function positionDealerBtn() {
   const btnPos=seatMap.indexOf('btn');
   const btnSeat=$('seat-'+btnPos); if(!btnSeat) return;
   const tableRect=$('table').getBoundingClientRect();
-  const seatRect=btnSeat.getBoundingClientRect();
-  const cx=tableRect.left+tableRect.width/2, cy=tableRect.top+tableRect.height/2;
-  const sx=seatRect.left+seatRect.width/2, sy=seatRect.top+seatRect.height;
-  const dx=cx-sx, dy=cy-sy;
-  const dist=Math.sqrt(dx*dx+dy*dy);
-  const nx=dx/dist, ny=dy/dist;
   const db=$('dealerBtn');
-  db.style.left=(sx+nx*55+20-tableRect.left-13)+'px';
-  db.style.top=(sy+ny*20-10-tableRect.top-13)+'px';
+  
+  // If BTN is at slot0 (Hero, bottom center), put D to the right of the label
+  if (btnPos === 0) {
+    const lblEl=$('lbl-btn');
+    if (lblEl) {
+      const lblRect=lblEl.getBoundingClientRect();
+      db.style.left=(lblRect.right+6-tableRect.left)+'px';
+      db.style.top=(lblRect.top+lblRect.height/2-13-tableRect.top)+'px';
+    }
+  } else {
+    const seatRect=btnSeat.getBoundingClientRect();
+    const cx=tableRect.left+tableRect.width/2, cy=tableRect.top+tableRect.height/2;
+    const sx=seatRect.left+seatRect.width/2, sy=seatRect.top+seatRect.height;
+    const dx=cx-sx, dy=cy-sy;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const nx=dx/dist, ny=dy/dist;
+    db.style.left=(sx+nx*55+20-tableRect.left-13)+'px';
+    db.style.top=(sy+ny*20-10-tableRect.top-13)+'px';
+  }
   db.classList.add('show');
 }
 function hideDealerBtn(){ $('dealerBtn').classList.remove('show'); }
