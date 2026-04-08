@@ -606,8 +606,70 @@ window.addEventListener('load', () => {
 // CLAUDE API — Parse hand text into structured JSON
 // ══════════════════════════════════════════
 async function parseHandWithClaude(type, blinds, stack, ante, handText, question) {
-  const systemPrompt = `You are a poker hand parser. Given a poker hand description in free text (Spanish or English), extract ALL information and return ONLY valid JSON with this exact structure. No markdown, no backticks, no explanation — ONLY the JSON object.
+  const systemPrompt = `You are an expert poker hand parser. Parse free-text poker hands (Spanish/English) into structured JSON. Return ONLY valid JSON — no markdown, no backticks, no explanation.
 
+CRITICAL PARSING RULES FOR COMPACT NOTATION:
+- Hands are written in a compressed format where streets are separated by the board cards
+- The FIRST group of 3 single-digit/letter cards after preflop action = FLOP (e.g. "974" = 9,7,4 or "AJ9" = A,J,9 or "T54" = T,5,4)
+- The NEXT single card after flop action = TURN (e.g. "3" or "K" or "T")
+- The NEXT single card after turn action = RIVER (e.g. "2" or "A" or "6")
+- Board cards are often glued to the previous pot number: "paga140 3xx" means pot=140, then flop has been shown, turn=3, xx=check-check
+- Cards like T=10, J=Jack, Q=Queen, K=King, A=Ace
+- "974cb 35" = flop is 9-7-4, then cbet 35
+- "3xx" = turn is 3, then check-check
+- "2Betea 55" = river is 2, then bet 55
+
+HAND FORMAT EXAMPLES:
+"88Or 35 Def BB 974cb 35 paga 3xx 2Betea 55 pago tiene K9hh"
+= Hero has 88, open raise 35, BB defends. Flop 9-7-4, cbet 35, BB calls. Turn 3, check-check. River 2, bet 55, call. Villain has K9hh.
+
+"Q8ss Or 60 HJ paga SB 160 AJ9hh cb 100 paga 360 5 cb 400 paga 1160 5 Donk 500 all in 1600 paga tiene A3cc"
+= Hero has Q8ss, raises 60 from HJ. SB calls. Pot 160. Flop AJ9 (two hearts), cbet 100, call. Pot 360. Turn 5, cbet 400, call. Pot 1160. River 5, donk 500, all-in 1600, call. Villain has A3cc.
+
+POSITION PARSING:
+- "Or 35" or "open raise 35" or "abre 35" = hero raises
+- "Def" or "defiende" or "paga" or "call" = call
+- "Reg" = regular player (not hero), use as villain name context
+- The position mentioned (BB, SB, HJ, CO, UTG, etc.) tells you who is involved
+- "Def BB" = BB defends/calls. "paga SB" = SB calls.
+
+ACTION PARSING:
+- "cb" / "cbet" / "c-bet" = continuation bet (action: "bet")
+- "xc" = check-call (two actions: check then call)
+- "xr" = check-raise (two actions: check then raise)
+- "xf" = check-fold (two actions: check then fold)
+- "xx" = check-check (both players check)
+- "Donk" / "donkea" = out-of-position bet (action: "bet")
+- "Betea" / "bet" / "apuesta" = bet
+- "pago" / "paga" / "call" = call
+- "fold" / "foldea" = fold
+- "all in" / "allin" / "push" / "lo pongo all in" = allin
+- Numbers after actions = amounts (e.g. "cb 35" = bet 35, "Betea 55" = bet 55)
+
+SUIT PARSING:
+- "ss" = both spades, "cc" = both clubs, "hh" = both hearts, "dd" = both diamonds
+- "K9hh" = K♥9♥ (both hearts)
+- "A3cc" = A♣3♣ (both clubs)
+- "Q8ss" = Q♠8♠ (both spades)
+- If board suits not specified, assign different suits (rainbow)
+- Suit suffixes on board: "AJ9hh" = two of the three are hearts, third is different
+- "974" with no suit = rainbow (three different suits)
+
+PLAYER IDENTIFICATION:
+- Hero is always the one whose cards are shown first
+- If text says "Or 35" without position, hero's position comes from context
+- "Def BB" means BB is the villain defending
+- "Reg" before a position means that's a regular player (villain)
+- Include ALL 8 positions in preflop actions (utg,utg1,lj,hj,co,btn,sb,bb) — fold everyone not mentioned
+
+WINNER DETECTION:
+- If villain shows cards and hero bet/called last = showdown
+- If hero folds = villain wins, no showdown
+- If villain folds = hero wins, no showdown
+- "tiene K9hh" = villain shows K9 hearts = showdown
+- Compare hands to determine winner
+
+OUTPUT FORMAT:
 {
   "gameType": "cash" or "tournament",
   "blinds": { "sb": number, "bb": number },
@@ -615,7 +677,7 @@ async function parseHandWithClaude(type, blinds, stack, ante, handText, question
   "effectiveStack": number,
   "heroPosition": "utg"|"utg1"|"lj"|"hj"|"co"|"btn"|"sb"|"bb",
   "heroCards": [{"rank":"Q","suit":"s","suitSymbol":"♠","color":"black"}, {"rank":"8","suit":"s","suitSymbol":"♠","color":"black"}],
-  "villainCards": [{"rank":"A","suit":"c","suitSymbol":"♣","color":"black"}, {"rank":"3","suit":"c","suitSymbol":"♣","color":"black"}] or null if unknown,
+  "villainCards": [{"rank":"A","suit":"c","suitSymbol":"♣","color":"black"}, {"rank":"3","suit":"c","suitSymbol":"♣","color":"black"}] or null,
   "board": {
     "flop": [{"rank":"A","suit":"h","suitSymbol":"♥","color":"red"}, ...] or null,
     "turn": {"rank":"5","suit":"s","suitSymbol":"♠","color":"black"} or null,
@@ -623,28 +685,17 @@ async function parseHandWithClaude(type, blinds, stack, ante, handText, question
   },
   "actions": [
     {"street":"preflop","player":"utg","action":"fold"},
-    {"street":"preflop","player":"hj","action":"raise","amount":60},
-    {"street":"preflop","player":"sb","action":"call","amount":60},
-    {"street":"flop","player":"sb","action":"check"},
-    {"street":"flop","player":"hj","action":"bet","amount":100},
     ...
   ],
-  "winner": "sb" or "hj" or null if unknown,
+  "winner": "sb" or "hj" or null,
   "showdown": true or false,
   "question": "the question text"
 }
 
-RULES:
-- Suits: s=spades(♠,black), c=clubs(♣,black), h=hearts(♥,red), d=diamonds(♦,red)
-- Common shorthand: "ss"=both spades, "cc"=both clubs, "hh"=both hearts, "dd"=both diamonds
-- "Or"/"open raise" = raise, "cb"/"cbet" = bet, "xf" = check then fold, "xr" = check-raise, "xc" = check-call
-- If suits not specified for board cards, assign different suits (rainbow)
-- If villain cards unknown, set villainCards to null
-- Include ALL folds from non-participating players in preflop actions
-- The player who is OOP (out of position) acts first post-flop
-- "donk" = bet from OOP when IP was the aggressor
-- "all-in"/"allin"/"push" = allin action
-- 8-max table: positions are utg, utg1, lj, hj, co, btn, sb, bb`;
+Suits: s=♠(black), c=♣(black), h=♥(red), d=♦(red)
+8-max table positions: utg, utg1, lj, hj, co, btn, sb, bb
+OOP acts first post-flop.
+Include ALL folds from non-participating players.`;
 
   const userMsg = `Game type: ${type}
 Blinds: ${blinds}
@@ -653,7 +704,7 @@ ${ante ? 'Ante: ' + ante : ''}
 Hand: ${handText}
 ${question ? 'Question: ' + question : ''}`;
 
-  const response = await fetch("https://pokerreplayer.pokertopprous25.workers.dev/", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
