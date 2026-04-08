@@ -632,6 +632,9 @@ HAND FORMAT EXAMPLES:
 "KQoROL 50 CO paga D Reg 120 J93dd xx A Delayed 75 paga Q xf a 300"
 = Hero has KQo (offsuit). There is a limper (UTG limps 10). Hero raises (ROL=raise over limper) to 50. CO is hero's position. BTN (villain, described as Reg) calls 50. Pot 120. Flop J-9-3 (two diamonds). Check-check. Turn A. Hero delayed cbet 75, villain calls. River Q. Hero check, villain bets 300, hero folds. Villain wins.
 
+"QThhOr Utg 16k paga CO paga BB 60000 J83cb 16k paga CO 92000 7hhh xr de 36k a Push 217k foldea y gano"
+= Hero has QThh in UTG. Raises 16k. CO calls 16k. BB calls (SB FOLDS - not mentioned). Pot 60000. Flop J-8-3 (one heart). Cbet 16k, CO calls. Pot 92000. Turn 7h (2 hearts on board now). Hero checks, CO bets 36k, Hero all-in 217k, CO folds. Hero wins.
+
 PREFLOP SPECIAL ACTIONS:
 - "ROL" = Raise Over Limper. This means someone limped (called the BB) BEFORE hero raised. 
 - If the limper's position is NOT specified, always put the limper at UTG (earliest position)
@@ -645,6 +648,14 @@ CRITICAL: EVERY call, bet, raise, and allin action MUST have an "amount" field w
 - Limp/call preflop = amount equals the BB or the raise amount
 - Call post-flop = amount equals the bet amount being called
 - "paga" after a bet of 75 = call with amount 75
+
+IMPORTANT PREFLOP RULES:
+- SB and BB post their blinds automatically — do NOT add call actions for them posting blinds
+- If text says "paga CO" and "paga BB" after a raise, ONLY CO and BB call. SB FOLDS unless explicitly mentioned as calling
+- "paga BB" means BB calls the raise (pays the difference between BB and raise amount)
+- SB folds unless the text explicitly says SB calls/defends/pays
+- When calculating BB's call amount: BB already posted the blind, so BB pays (raise_amount - BB_blind)
+- Do NOT confuse blind posting with calling. SB posting 4k blind is NOT a call
 
 CARD FORMAT:
 - "KQo" = K and Q offsuit (different suits). Assign different suits like K♠Q♥
@@ -685,7 +696,10 @@ SUIT PARSING:
 - BOARD suit suffixes: "J93dd" = TWO of the three flop cards are diamonds, third is different suit
 - "AJ9hh" = two of the three are hearts, third is different
 - "974" with no suit = rainbow (three different suits)
+- Turn/River suits: "7hhh" or "7h" after a flop with hearts = turn is 7♥. The "hhh" means there are now 3 hearts total on board (flop had 1-2 hearts + this turn heart)
 - When assigning board suits, never reuse a suit that a player's hole cards already have unless specified
+- "xr" on turn/river = check, then when opponent bets, raise. "xr de 36k a Push 217k" = opponent bets 36k, hero raises all-in to 217k
+- "Push" = all-in (action: "allin")
 
 PLAYER IDENTIFICATION:
 - Hero is always the one whose cards are shown first
