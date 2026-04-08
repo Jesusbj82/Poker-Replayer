@@ -635,11 +635,16 @@ HAND FORMAT EXAMPLES:
 PREFLOP SPECIAL ACTIONS:
 - "ROL" = Raise Over Limper. This means someone limped (called the BB) BEFORE hero raised. 
 - If the limper's position is NOT specified, always put the limper at UTG (earliest position)
-- A limper calls the BB amount (e.g. in 5/10, limper calls 10)
+- A limper calls the BB amount. Use action "call" with amount equal to BB (e.g. in 5/10, amount: 10)
 - After ROL, the limper usually folds to the raise (unless text says otherwise)
 - "Or" / "open raise" = raise with NO limper before
 - "3bet" = re-raise after someone raised. "4bet" = re-re-raise.
 - "Def" / "defiende" = call a raise (typically from BB or SB)
+
+CRITICAL: EVERY call, bet, raise, and allin action MUST have an "amount" field with the correct number. NEVER set amount to 0 or omit it.
+- Limp/call preflop = amount equals the BB or the raise amount
+- Call post-flop = amount equals the bet amount being called
+- "paga" after a bet of 75 = call with amount 75
 
 CARD FORMAT:
 - "KQo" = K and Q offsuit (different suits). Assign different suits like K♠Q♥
@@ -819,14 +824,16 @@ function initReplay(hd) {
   if (!qText) $('questionBox').style.display = 'none';
   else $('questionBox').style.display = '';
 
-  // Build seats
-  const allChipSeats = new Set([...activePlayers, 'sb', 'bb']);
+  // Build seats — create chip zones for ALL players who take any action
+  const playersWithActions = new Set(['sb', 'bb']);
+  hd.actions.forEach(a => playersWithActions.add(a.player));
+  
   seatMap.forEach((pos, slotIdx) => {
     const seatEl = $('seat-' + slotIdx);
     seatEl.className = 'player ' + SLOT_CLASSES[slotIdx];
     const isHero = pos === heroPosition;
     const isBottom = slotIdx === 0 || slotIdx === 1 || slotIdx === 7;
-    const chipZoneHTML = allChipSeats.has(pos) ?
+    const chipZoneHTML = playersWithActions.has(pos) ?
       `<div class="chip-zone" id="chips-${pos}"><div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div></div>` : '';
     const checkHTML = `<div class="check-label" id="check-${pos}">CHECK</div>`;
     const labelHTML = `<div class="seat-label${isHero?' hero':''}" id="lbl-${pos}">
@@ -950,12 +957,24 @@ function buildSteps(hd) {
             lightSeat(lbl); hideAllChecks();
             if (callAmt > 0) {
               showChips(p, callAmt, fmt(callAmt), 'call');
-              stacks[p] -= callAmt; invested[p] += callAmt;
+              stacks[p] -= callAmt;
               setStack(p, stacks[p]);
             }
             pot += callAmt;
             setPot('POT: ' + fmt(pot));
             setAction('✅ ' + name + ' call ' + fmt(callAmt));
+          }});
+          break;
+        case 'limp':
+          const limpAmt = act.amount || hd.blinds.bb;
+          steps.push({fn() {
+            lightSeat(lbl); hideAllChecks();
+            showChips(p, limpAmt, fmt(limpAmt), 'call');
+            stacks[p] -= limpAmt;
+            setStack(p, stacks[p]);
+            pot += limpAmt;
+            setPot('POT: ' + fmt(pot));
+            setAction('✅ ' + name + ' limp ' + fmt(limpAmt));
           }});
           break;
         case 'bet':
