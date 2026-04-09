@@ -652,9 +652,9 @@ CRITICAL: EVERY call, bet, raise, and allin action MUST have an "amount" field w
 IMPORTANT PREFLOP RULES:
 - SB and BB post their blinds automatically — do NOT add call actions for them posting blinds
 - If text says "paga CO" and "paga BB" after a raise, ONLY CO and BB call. SB FOLDS unless explicitly mentioned as calling
-- "paga BB" means BB calls the raise (pays the difference between BB and raise amount)
+- BB CALL AMOUNT = the FULL raise amount, NOT the difference. Example: blinds 4k/8k, Hero raises to 16k, BB calls → BB action is {"action":"call","amount":16000}. The engine handles the blind deduction.
+- Same for ALL callers: call amount = the raise amount being called
 - SB folds unless the text explicitly says SB calls/defends/pays
-- When calculating BB's call amount: BB already posted the blind, so BB pays (raise_amount - BB_blind)
 - Do NOT confuse blind posting with calling. SB posting 4k blind is NOT a call
 
 CARD FORMAT:
@@ -696,7 +696,11 @@ SUIT PARSING:
 - BOARD suit suffixes: "J93dd" = TWO of the three flop cards are diamonds, third is different suit
 - "AJ9hh" = two of the three are hearts, third is different
 - "974" with no suit = rainbow (three different suits)
-- Turn/River suits: "7hhh" or "7h" after a flop with hearts = turn is 7♥. The "hhh" means there are now 3 hearts total on board (flop had 1-2 hearts + this turn heart)
+- TURN SUIT RULE: When the turn card has "hh" or "dd" or "ss" or "cc" suffix (e.g. "7hh", "2dd"), it means:
+  1. The turn card IS that suit (7♥ for "7hh")
+  2. There was ALREADY one card of that suit on the flop — so assign ONE flop card to that suit
+  Example: flop "J83" then turn "7hh" → one of J/8/3 must be ♥, and the turn 7 is ♥. So board has 2 hearts total.
+- "7hhh" with triple letter = turn is that suit AND there were already 2 of that suit on the flop (now 3 total on board)
 - When assigning board suits, never reuse a suit that a player's hole cards already have unless specified
 - "xr" on turn/river = check, then when opponent bets, raise. "xr de 36k a Push 217k" = opponent bets 36k, hero raises all-in to 217k
 - "Push" = all-in (action: "allin")
@@ -970,11 +974,20 @@ function buildSteps(hd) {
           steps.push({fn() {
             lightSeat(lbl); hideAllChecks();
             if (callAmt > 0) {
+              // Show full amount visually
               showChips(p, callAmt, fmt(callAmt), 'call');
-              stacks[p] -= callAmt;
-              setStack(p, stacks[p]);
+              // For BB/SB preflop, they already posted blinds, so only deduct the extra
+              let actualDeduct = callAmt;
+              if (street === 'preflop') {
+                if (p === 'bb') actualDeduct = callAmt - hd.blinds.bb;
+                else if (p === 'sb') actualDeduct = callAmt - hd.blinds.sb;
+              }
+              if (actualDeduct > 0) {
+                stacks[p] -= actualDeduct;
+                setStack(p, stacks[p]);
+                pot += actualDeduct;
+              }
             }
-            pot += callAmt;
             setPot('POT: ' + fmt(pot));
             setAction('✅ ' + name + ' call ' + fmt(callAmt));
           }});
@@ -999,9 +1012,15 @@ function buildSteps(hd) {
           steps.push({fn() {
             lightSeat(lbl); hideAllChecks();
             showChips(p, betAmt, fmt(betAmt), actLabel);
-            stacks[p] -= betAmt; invested[p] += betAmt;
+            // For SB/BB preflop raises, account for already-posted blinds
+            let raiseDeduct = betAmt;
+            if (street === 'preflop') {
+              if (p === 'bb') raiseDeduct = betAmt - hd.blinds.bb;
+              else if (p === 'sb') raiseDeduct = betAmt - hd.blinds.sb;
+            }
+            stacks[p] -= raiseDeduct;
             setStack(p, stacks[p]);
-            pot += betAmt;
+            pot += raiseDeduct;
             setPot('POT: ' + fmt(pot));
             const emoji = act.action === 'raise' ? '📢' : '💰';
             setAction(emoji + ' ' + name + ' ' + act.action + ' ' + fmt(betAmt));
