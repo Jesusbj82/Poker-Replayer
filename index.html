@@ -673,7 +673,8 @@ POSITION PARSING:
 - "Def BB" = BB defends/calls. "paga SB" = SB calls.
 
 ACTION PARSING:
-- "cb" / "cbet" / "c-bet" = continuation bet (action: "bet")
+- "cb" / "cbet" / "c-bet" = continuation bet. The PREFLOP AGGRESSOR (raiser) bets. If Hero raised preflop, hero cbets. If villain raised preflop, villain cbets.
+- "CCB" / "ccb" = Call a C-Bet. This means TWO actions: the preflop aggressor c-bets, then the other player CALLS. If villain raised preflop: villain bets (cbet), hero calls.
 - "Delayed" / "delayed cbet" / "delayed cb" = bet on a later street after checking the previous (action: "bet")
 - "xc" = check-call (two actions: check then call)
 - "xr" = check-raise (two actions: check then raise)  
@@ -684,7 +685,7 @@ ACTION PARSING:
 - "pago" / "paga" / "call" = call
 - "fold" / "foldea" = fold
 - "all in" / "allin" / "push" / "lo pongo all in" = allin
-- Numbers after actions = amounts (e.g. "cb 35" = bet 35, "Betea 55" = bet 55)
+- Numbers after actions = amounts (e.g. "cb 35" = bet 35, "CCB 35" = villain cbets 35 then hero calls 35)
 
 SUIT PARSING:
 - "ss" = both spades, "cc" = both clubs, "hh" = both hearts, "dd" = both diamonds
