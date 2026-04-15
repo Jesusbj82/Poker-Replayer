@@ -62,6 +62,31 @@ body {
 }
 .form-input:focus { border-color: #c9a84c; }
 .form-input::placeholder { color: #555; }
+.hand-input {
+  width: 100%; min-height: 120px; padding: 12px; font-size: 0.8rem;
+  font-family: 'Roboto Condensed', sans-serif; line-height: 1.5;
+  background: rgba(255,255,255,0.05); border: 1.5px solid #333; border-radius: 6px;
+  color: #e0d8c0; outline: none; overflow-y: auto; max-height: 300px;
+  transition: border-color 0.2s; word-wrap: break-word;
+}
+.hand-input:focus { border-color: #c9a84c; }
+.hand-input:empty::before {
+  content: attr(data-placeholder); color: #555; pointer-events: none;
+}
+.hand-input img { max-width: 100%; max-height: 200px; border-radius: 4px; margin: 4px 0; }
+.hand-input.drag-over { border-color: #c9a84c; background: rgba(201,168,76,0.08); }
+.image-preview {
+  display: none; margin-top: 8px; position: relative;
+}
+.image-preview.show { display: block; }
+.image-preview img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #444; }
+.image-preview .remove-img {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px;
+  background: #cc4444; border: none; border-radius: 50%; color: #fff;
+  font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.image-preview .remove-img:hover { background: #ff5555; }
 .form-textarea {
   width: 100%; min-height: 120px; padding: 12px; font-size: 0.8rem;
   font-family: 'Roboto Condensed', sans-serif; line-height: 1.5;
@@ -384,25 +409,26 @@ body {
 
   <div class="input-row">
     <div class="form-row">
-      <span class="form-label">Blinds</span>
+      <span class="form-label">Blinds <span style="color:#555;font-weight:400">(opcional)</span></span>
       <input class="form-input" type="text" id="fBlinds" placeholder="opcional - ej: 5/10" />
     </div>
     <div class="form-row">
-      <span class="form-label">Stack efectivo</span>
+      <span class="form-label">Stack efectivo <span style="color:#555;font-weight:400">(opcional)</span></span>
       <input class="form-input" type="text" id="fStack" placeholder="opcional - ej: 2000" />
     </div>
   </div>
 
   <div class="form-row ante-row" id="anteRow">
-    <span class="form-label">Ante</span>
+    <span class="form-label">Ante <span style="color:#555;font-weight:400">(opcional)</span></span>
     <input class="form-input" type="text" id="fAnte" placeholder="ej: 2000" />
   </div>
 
   <div class="divider"></div>
 
   <div class="form-row">
-    <span class="form-label">Pega tu mano aqui</span>
-    <textarea class="form-textarea" id="fHand" placeholder="ej: Q8ss Or 60 HJ paga SB 160 AJ9hh cb 100 paga 360 5 cb 400 paga 1160 5 Donk 500 lo pongo All in 1600 paga tiene A3cc"></textarea>
+    <span class="form-label">Pega tu mano aqui <span style="color:#555;font-weight:400">(texto o imagen)</span></span>
+    <div class="hand-input" id="fHand" contenteditable="true" data-placeholder="Pega texto, arrastra o pega (Ctrl+V) una imagen de GGPoker / PokerStars"></div>
+    <div class="image-preview" id="imagePreview"></div>
   </div>
 
   <div class="form-row">
@@ -484,6 +510,72 @@ const SLOT_CLASSES = ['slot0','slot1','slot2','slot3','slot4','slot5','slot6','s
 const API_URL = 'https://pokerreplayer.pokertopprous25.workers.dev/';
 
 // ══════════════════════════════════════════
+// IMAGE HANDLING — paste, drag & drop
+// ══════════════════════════════════════════
+let pastedImageBase64 = null;
+let pastedImageType = null;
+
+const handInput = $('fHand');
+const imagePreview = $('imagePreview');
+
+function handleImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  pastedImageType = file.type;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result.split(',')[1];
+    pastedImageBase64 = base64;
+    imagePreview.innerHTML = `<img src="${e.target.result}"><button class="remove-img" onclick="removeImage()">✕</button>`;
+    imagePreview.classList.add('show');
+    // Clear any text in the input since we have an image
+    handInput.innerHTML = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  pastedImageBase64 = null;
+  pastedImageType = null;
+  imagePreview.innerHTML = '';
+  imagePreview.classList.remove('show');
+}
+
+// Paste handler — detect image in clipboard
+handInput.addEventListener('paste', (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      handleImageFile(item.getAsFile());
+      return;
+    }
+  }
+  // If no image, let text paste through normally
+  // But strip any HTML formatting
+  e.preventDefault();
+  const text = e.clipboardData.getData('text/plain');
+  document.execCommand('insertText', false, text);
+});
+
+// Drag & drop handler
+handInput.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  handInput.classList.add('drag-over');
+});
+handInput.addEventListener('dragleave', () => {
+  handInput.classList.remove('drag-over');
+});
+handInput.addEventListener('drop', (e) => {
+  e.preventDefault();
+  handInput.classList.remove('drag-over');
+  const files = e.dataTransfer?.files;
+  if (files && files.length > 0) {
+    handleImageFile(files[0]);
+  }
+});
+
+// ══════════════════════════════════════════
 // FORM LOGIC
 // ══════════════════════════════════════════
 let gameType = 'cash';
@@ -498,11 +590,12 @@ $('btnGenerate').addEventListener('click', async () => {
   const blinds = $('fBlinds').value.trim();
   const stack = $('fStack').value.trim();
   const ante = $('fAnte').value.trim();
-  const hand = $('fHand').value.trim();
+  const hand = $('fHand').innerText.trim();
   const question = $('fQuestion').value.trim();
+  const hasImage = !!pastedImageBase64;
 
-  if (!hand) {
-    $('errorMsg').textContent = 'Por favor pega tu mano.';
+  if (!hand && !hasImage) {
+    $('errorMsg').textContent = 'Por favor pega tu mano (texto o imagen).';
     $('errorMsg').classList.add('show');
     return;
   }
@@ -512,7 +605,7 @@ $('btnGenerate').addEventListener('click', async () => {
   $('loadingOverlay').classList.add('show');
 
   try {
-    const handData = await parseHandWithClaude(gameType, blinds, stack, ante, hand, question);
+    const handData = await parseHandWithClaude(gameType, blinds, stack, ante, hand, question, pastedImageBase64, pastedImageType);
     // Always use the form's question, not Claude's
     handData.question = question || handData.question || '';
     currentHandData = handData;
@@ -538,6 +631,8 @@ $('btnGenerate').addEventListener('click', async () => {
 $('btnNewHand').addEventListener('click', () => {
   $('replayWrap').classList.remove('show');
   $('formWrap').classList.remove('hidden');
+  removeImage();
+  $('fHand').innerHTML = '';
   // Clear URL params
   try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
 });
@@ -608,8 +703,23 @@ window.addEventListener('load', () => {
 // ══════════════════════════════════════════
 // CLAUDE API — Parse hand text into structured JSON
 // ══════════════════════════════════════════
-async function parseHandWithClaude(type, blinds, stack, ante, handText, question) {
-  const systemPrompt = `You are an expert poker hand parser. Parse free-text poker hands (Spanish/English) into structured JSON. Return ONLY valid JSON — no markdown, no backticks, no explanation.
+async function parseHandWithClaude(type, blinds, stack, ante, handText, question, imageBase64, imageType) {
+  const systemPrompt = `You are an expert poker hand parser. Parse free-text poker hands OR poker hand screenshots (from GGPoker, PokerStars, 888poker, etc.) into structured JSON. Return ONLY valid JSON — no markdown, no backticks, no explanation.
+
+WHEN READING AN IMAGE:
+- Read the screenshot carefully. Look for: player positions, stack sizes, cards, board cards, pot size, and the action history panel.
+- GGPoker shows actions in a panel at the bottom with columns: Ciegas/Ante, Pre-Flop, Flop, Turn, River
+- PokerStars shows a hand history text format
+- Extract ALL actions from the image: raises, calls, checks, folds, bets, all-ins
+- Read player positions (UTG, UTG1, MP, CO, BTN, SB, BB) and map them to 8-max format
+- GGPoker "MP" position in a 8-player table = "lj" or "hj" depending on seat count. For 8-max: UTG, UTG1, LJ(MP), HJ(MP1), CO, BTN, SB, BB
+- "Subir" = raise, "Igualar" = call, "No ir" = fold, "Pasar" = check, "Apostar" = bet
+- "CP" = post small blind, "CG" = post big blind
+- Read the hero's cards (face up) and any shown villain cards
+- Read the board cards (flop, turn, river) with correct suits
+- Identify the winner from the image
+- If values are in BB, convert to actual chips using the blind level shown
+- "Victorias X BB" = player wins X BB worth of chips
 
 CRITICAL PARSING RULES FOR COMPACT NOTATION:
 - Hands are written in a compressed format where streets are separated by the board cards
@@ -760,12 +870,23 @@ EXTRACTING MISSING INFO FROM HAND TEXT:
 - "Or 12k en 6k" = raise to 12k, BB is 6k (so SB=3k)
 - Always calculate effectiveStack as a number (not in bb), convert bb to chips.`;
 
-  const userMsg = `Game type: ${type}
-${blinds ? 'Blinds: ' + blinds : 'Blinds: extract from hand text'}
-${stack ? 'Stack: ' + stack : 'Stack: extract from hand text'}
-${ante ? 'Ante: ' + ante : (type === 'torneo' ? 'Ante: extract from hand text' : '')}
-Hand: ${handText}
+  const userMsgText = `Game type: ${type}
+${blinds ? 'Blinds: ' + blinds : 'Blinds: extract from hand text or image'}
+${stack ? 'Stack: ' + stack : 'Stack: extract from hand text or image'}
+${ante ? 'Ante: ' + ante : (type === 'torneo' ? 'Ante: extract from hand text or image' : '')}
+${handText ? 'Hand: ' + handText : ''}
 ${question ? 'Question: ' + question : ''}`;
+
+  // Build message content — text only or text + image
+  let messageContent;
+  if (imageBase64 && imageType) {
+    messageContent = [
+      { type: "image", source: { type: "base64", media_type: imageType, data: imageBase64 } },
+      { type: "text", text: userMsgText || "Parse this poker hand screenshot into JSON." }
+    ];
+  } else {
+    messageContent = userMsgText;
+  }
 
   const response = await fetch(API_URL, {
     method: "POST",
@@ -774,7 +895,7 @@ ${question ? 'Question: ' + question : ''}`;
       model: "claude-sonnet-4-20250514",
       max_tokens: 2000,
       system: systemPrompt,
-      messages: [{ role: "user", content: userMsg }]
+      messages: [{ role: "user", content: messageContent }]
     })
   });
 
