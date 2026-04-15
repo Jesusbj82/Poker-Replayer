@@ -736,16 +736,14 @@ GGPOKER POSITION MAPPING (8-max):
 
 CRITICAL HERO POSITION RULE:
 - GGPoker labels the hero as "Hero" WITHOUT showing their table position name
-- To determine Hero's ACTUAL position, count seats clockwise from the dealer (BTN):
-  - Seat to the RIGHT of BTN = CO
-  - Two seats right of BTN = HJ (MP1)
-  - Three seats right of BTN = LJ (MP)
-  - etc.
-- Also check which position labels are MISSING from other players — Hero fills that gap
-- If all other positions (UTG, UTG1, MP, MP1, BTN, SB, BB) are labeled on other players, and one position like CO is missing, then Hero = CO
-- "No ir" = fold. If MP1 says "No ir" in preflop, MP1 folded — Hero is NOT MP1
-- The action panel at the bottom shows WHO did each action — match actions to positions carefully
-- Hero's position in the action panel shows as a YELLOW highlighted box (Hero's actions are highlighted)
+- To determine Hero's position, look at ALL OTHER players' position labels and find which position is MISSING:
+  - 8-max positions: UTG, UTG1, MP(=lj), MP1(=hj), CO, BTN, SB, BB
+  - If you see labels for UTG, UTG1, MP, MP1, BTN, SB, BB on other players, the missing one is CO → Hero = CO
+  - If you see labels for UTG, UTG1, MP, CO, BTN, SB, BB on other players, the missing one is MP1(HJ) → Hero = HJ
+- This is the MOST RELIABLE method. Always use this method FIRST.
+- EXAMPLE: In the image you see players labeled UTG, UTG1, MP, MP1, BTN, SB, BB around the table, but Hero has no position label. Count: UTG✓ UTG1✓ MP✓ MP1✓ BTN✓ SB✓ BB✓ — wait, that's all 7 non-hero positions but one of them (MP1) says "No ir" (fold). The missing SEAT is CO because Hero sits between MP1 and BTN. Hero = CO.
+- NEVER assume Hero is the same position as another visible player
+- "No ir" next to a position means that player EXISTS and FOLDED — they are NOT hero
 
 GGPOKER SPANISH TERMS:
 - "Subir X BB" = raise to X BB
