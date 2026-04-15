@@ -284,6 +284,15 @@ body {
 .seat-label.hero .stack { color: #90dd90; border-color: #3a7a3a; }
 .seat-label.lit { border-color: #fff !important; box-shadow: 0 0 14px rgba(255,255,255,0.4) !important; }
 .seat-label.folded { opacity: 0.3; }
+.bounty-badge {
+  position: absolute; top: -10px; right: -10px;
+  background: linear-gradient(135deg, #c9a84c, #a07830);
+  color: #1a0f00; font-size: 0.55rem; font-weight: 800;
+  padding: 2px 6px; border-radius: 8px;
+  white-space: nowrap; z-index: 5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  font-family: 'Roboto Condensed', sans-serif;
+}
 .hole-cards { display: flex; gap: 3px; min-height: 56px; align-items: center; position: relative; }
 .chip-zone {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -711,15 +720,47 @@ WHEN READING AN IMAGE:
 - GGPoker shows actions in a panel at the bottom with columns: Ciegas/Ante, Pre-Flop, Flop, Turn, River
 - PokerStars shows a hand history text format
 - Extract ALL actions from the image: raises, calls, checks, folds, bets, all-ins
-- Read player positions (UTG, UTG1, MP, CO, BTN, SB, BB) and map them to 8-max format
-- GGPoker "MP" position in a 8-player table = "lj" or "hj" depending on seat count. For 8-max: UTG, UTG1, LJ(MP), HJ(MP1), CO, BTN, SB, BB
-- "Subir" = raise, "Igualar" = call, "No ir" = fold, "Pasar" = check, "Apostar" = bet
-- "CP" = post small blind, "CG" = post big blind
 - Read the hero's cards (face up) and any shown villain cards
-- Read the board cards (flop, turn, river) with correct suits
-- Identify the winner from the image
-- If values are in BB, convert to actual chips using the blind level shown
-- "Victorias X BB" = player wins X BB worth of chips
+- Read the board cards (flop, turn, river) with correct suits and colors
+- Identify the winner from the image ("Victorias X BB" or "WIN" label)
+
+GGPOKER POSITION MAPPING (8-max):
+- GGPoker "UTG" = our "utg"
+- GGPoker "UTG1" = our "utg1"  
+- GGPoker "MP" = our "lj" (Lojack)
+- GGPoker "MP1" = our "hj" (Hijack)
+- GGPoker "CO" = our "co"
+- GGPoker "BTN" = our "btn"
+- GGPoker "SB" = our "sb"
+- GGPoker "BB" = our "bb"
+
+GGPOKER SPANISH TERMS:
+- "Subir X BB" = raise to X BB
+- "Igualar X BB" = call X BB
+- "No ir" = fold
+- "Pasar" = check
+- "Apostar X BB" = bet X BB
+- "CP 0.5 BB" = post small blind (Ciega Pequeña). This is NOT a call action.
+- "CG 1 BB" = post big blind (Ciega Grande). This is NOT a call action.
+- "Todas las apuestas iniciales 1.2 BB" = total ante. In 8-max, each player posts 0.15 BB ante (1.2 BB / 8 = 0.15 BB each)
+
+GGPOKER ANTE CALCULATION:
+- The "Ciegas (Ante)" column shows total ante collected (e.g. "1.2 BB")
+- Divide by number of players to get per-player ante
+- For 8-max: ante per player = total_ante / 8
+- The BB posts the full ante amount on behalf of all players (BB Ante format)
+
+GGPOKER VALUES:
+- All values in GGPoker screenshots are in BB (big blinds). Convert to chips: multiply by BB amount.
+- If the BB amount is not clear, keep values in BB and set blinds to {sb: 0.5, bb: 1}
+- Stack sizes like "264 BB" = 264 × BB amount
+- If you see dollar amounts like "$3.50" next to each player, these are BOUNTIES (tournament knockout prizes), NOT antes or bets.
+
+BOUNTY DETECTION:
+- In GGPoker bounty/knockout tournaments, each player has a dollar amount shown above or near their seat (e.g. "$3.50")
+- This is the bounty/knockout prize for eliminating that player
+- Include bounties in the JSON output as a "bounties" field: {"utg": 3.50, "utg1": 3.50, ...}
+- If no bounties are visible, omit the bounties field
 
 CRITICAL PARSING RULES FOR COMPACT NOTATION:
 - Hands are written in a compressed format where streets are separated by the board cards
@@ -854,7 +895,8 @@ OUTPUT FORMAT:
   ],
   "winner": "sb" or "hj" or null,
   "showdown": true or false,
-  "question": "the question text"
+  "question": "the question text",
+  "bounties": {"utg": 3.50, "utg1": 3.50, "lj": 3.50, ...} or null
 }
 
 Suits: s=♠(black), c=♣(black), h=♥(red), d=♦(red)
@@ -984,7 +1026,10 @@ function initReplay(hd) {
     const chipZoneHTML = playersWithActions.has(pos) ?
       `<div class="chip-zone" id="chips-${pos}"><div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div></div>` : '';
     const checkHTML = `<div class="check-label" id="check-${pos}">CHECK</div>`;
-    const labelHTML = `<div class="seat-label${isHero?' hero':''}" id="lbl-${pos}">
+    const bountyHTML = (hd.bounties && hd.bounties[pos]) ? 
+      `<div class="bounty-badge">$${hd.bounties[pos]}</div>` : '';
+    const labelHTML = `<div class="seat-label${isHero?' hero':''}" id="lbl-${pos}" style="position:relative">
+      ${bountyHTML}
       <span class="pos">${pos.toUpperCase()}${isHero?' · HERO':''}</span>
       <div class="name-row"><span class="name">${isHero?'Hero':'Seat '+(slotIdx+1)}</span><span class="stack" id="stk-${pos}">${fmt(hd.effectiveStack)}</span></div>
     </div>`;
