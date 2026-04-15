@@ -385,11 +385,11 @@ body {
   <div class="input-row">
     <div class="form-row">
       <span class="form-label">Blinds</span>
-      <input class="form-input" type="text" id="fBlinds" placeholder="ej: 5/10" />
+      <input class="form-input" type="text" id="fBlinds" placeholder="opcional - ej: 5/10" />
     </div>
     <div class="form-row">
       <span class="form-label">Stack efectivo</span>
-      <input class="form-input" type="text" id="fStack" placeholder="ej: 2000" />
+      <input class="form-input" type="text" id="fStack" placeholder="opcional - ej: 2000" />
     </div>
   </div>
 
@@ -501,8 +501,8 @@ $('btnGenerate').addEventListener('click', async () => {
   const hand = $('fHand').value.trim();
   const question = $('fQuestion').value.trim();
 
-  if (!blinds || !stack || !hand) {
-    $('errorMsg').textContent = 'Por favor completa Blinds, Stack y la mano.';
+  if (!hand) {
+    $('errorMsg').textContent = 'Por favor pega tu mano.';
     $('errorMsg').classList.add('show');
     return;
   }
@@ -750,12 +750,20 @@ OUTPUT FORMAT:
 Suits: s=♠(black), c=♣(black), h=♥(red), d=♦(red)
 8-max table positions: utg, utg1, lj, hj, co, btn, sb, bb
 OOP acts first post-flop.
-Include ALL folds from non-participating players.`;
+Include ALL folds from non-participating players.
+
+EXTRACTING MISSING INFO FROM HAND TEXT:
+- If Blinds are not provided, extract them from the hand text. Look for clues like "en 6k" (BB=6k, SB=3k), "5/10", or infer from bet sizes.
+- If Stack is not provided, extract from text. "18bb eff" = 18 × BB. "eff 5k" = 5000. "con 30bb" = 30 × BB.
+- If Ante is not provided for tournaments, check if mentioned in text. "ante de 6k" = 6000. For tournaments, if not mentioned, assume ante = BB.
+- "en 6k con 18bb" = BB is 6k, effective stack is 18 × 6k = 108k
+- "Or 12k en 6k" = raise to 12k, BB is 6k (so SB=3k)
+- Always calculate effectiveStack as a number (not in bb), convert bb to chips.`;
 
   const userMsg = `Game type: ${type}
-Blinds: ${blinds}
-Stack: ${stack}
-${ante ? 'Ante: ' + ante : ''}
+${blinds ? 'Blinds: ' + blinds : 'Blinds: extract from hand text'}
+${stack ? 'Stack: ' + stack : 'Stack: extract from hand text'}
+${ante ? 'Ante: ' + ante : (type === 'torneo' ? 'Ante: extract from hand text' : '')}
 Hand: ${handText}
 ${question ? 'Question: ' + question : ''}`;
 
