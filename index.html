@@ -734,6 +734,19 @@ GGPOKER POSITION MAPPING (8-max):
 - GGPoker "SB" = our "sb"
 - GGPoker "BB" = our "bb"
 
+CRITICAL HERO POSITION RULE:
+- GGPoker labels the hero as "Hero" WITHOUT showing their table position name
+- To determine Hero's ACTUAL position, count seats clockwise from the dealer (BTN):
+  - Seat to the RIGHT of BTN = CO
+  - Two seats right of BTN = HJ (MP1)
+  - Three seats right of BTN = LJ (MP)
+  - etc.
+- Also check which position labels are MISSING from other players — Hero fills that gap
+- If all other positions (UTG, UTG1, MP, MP1, BTN, SB, BB) are labeled on other players, and one position like CO is missing, then Hero = CO
+- "No ir" = fold. If MP1 says "No ir" in preflop, MP1 folded — Hero is NOT MP1
+- The action panel at the bottom shows WHO did each action — match actions to positions carefully
+- Hero's position in the action panel shows as a YELLOW highlighted box (Hero's actions are highlighted)
+
 GGPOKER SPANISH TERMS:
 - "Subir X BB" = raise to X BB
 - "Igualar X BB" = call X BB
