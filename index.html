@@ -757,18 +757,22 @@ GGPOKER SPANISH TERMS:
 
 GGPOKER ANTE CALCULATION:
 - The "Ciegas (Ante)" column shows total ante collected (e.g. "1.2 BB")
-- Divide by number of players to get per-player ante
-- For 8-max: ante per player = total_ante / 8
-- The BB posts the full ante amount on behalf of all players (BB Ante format)
+- This is BB ANTE format: the BB posts the FULL ante amount on behalf of ALL players
+- So if total ante is 1.2 BB, set "ante": 1.2 (the BB pays this entire amount)
+- Do NOT divide by number of players — the BB pays it all
+- The ante flies from BB position to center of table in the replay
 
 GGPOKER VALUES:
 - All values in GGPoker screenshots are in BB (big blinds). Convert to chips: multiply by BB amount.
 - If the BB amount is not clear, keep values in BB and set blinds to {sb: 0.5, bb: 1}
-- Stack sizes like "264 BB" = 264 × BB amount
-- IMPORTANT: Each player has a DIFFERENT stack size. Read each player's stack individually from the image.
-- Include individual stacks in "playerStacks" field using our position names: {"utg": 128.8, "utg1": 94.6, "lj": number, "hj": number, "co": 264, "btn": 146.3, "sb": 123, "bb": 123.6}
-- "effectiveStack" should be set to Hero's stack
-- If values are in BB, use the BB values directly (e.g. 264 for "264 BB")
+- CRITICAL STACK RULE: GGPoker shows the REMAINING stack (after bets), NOT the starting stack!
+  - To calculate the STARTING stack: add back all the bets that player made during the hand
+  - Example: MP shows 42.6 BB remaining, and MP bet 8.8 BB on flop + 30.5 BB on turn + 34.8 BB on river = 74.1 BB total bet. Starting stack = 42.6 + 74.1 + the ante/blinds they posted = approximately the original stack
+  - For Hero: if Hero shows 181.9 BB remaining and called 8 BB preflop + called 8.8 BB flop + called 30.5 BB turn + bet 34.8 BB river = 82.1 BB total. Starting stack ≈ 181.9 + 82.1 = 264 BB
+  - Use the STARTING stacks in "playerStacks", not the remaining stacks shown in the image
+- IMPORTANT: Each player has a DIFFERENT stack size. Read each player's remaining stack and calculate back to starting stack.
+- Include individual stacks in "playerStacks" field using our position names
+- "effectiveStack" should be set to Hero's STARTING stack
 - If you see dollar amounts like "$3.50" next to each player, these are BOUNTIES (tournament knockout prizes), NOT antes or bets or stacks.
 
 BOUNTY DETECTION (IMPORTANT — always check for this):
@@ -999,7 +1003,8 @@ function initReplay(hd) {
     cardDefs[heroPosition + '-1'] = { rank: hd.heroCards[1].rank, suit: hd.heroCards[1].suitSymbol, color: hd.heroCards[1].color };
   }
   if (hd.villainCards) {
-    const villainPos = activePlayers.find(p => p !== heroPosition) || 'bb';
+    // Assign villain cards to the winner (if villain won) or to the first active non-hero player
+    const villainPos = hd.winner && hd.winner !== heroPosition ? hd.winner : activePlayers.find(p => p !== heroPosition) || 'bb';
     cardDefs[villainPos + '-0'] = { rank: hd.villainCards[0].rank, suit: hd.villainCards[0].suitSymbol, color: hd.villainCards[0].color };
     cardDefs[villainPos + '-1'] = { rank: hd.villainCards[1].rank, suit: hd.villainCards[1].suitSymbol, color: hd.villainCards[1].color };
   }
@@ -1252,7 +1257,7 @@ function buildSteps(hd) {
   // SHOWDOWN
   if (hd.showdown && hd.winner) {
     const winnerPos = hd.winner;
-    const villainPos = activePlayers.find(p => p !== heroPosition);
+    const villainPos = winnerPos !== heroPosition ? winnerPos : activePlayers.find(p => p !== heroPosition);
     steps.push({fn() {
       lightSeat(null); setAction('💫 Fichas al pozo...');
       collectToPot(pot, 'POT: ' + fmt(pot), () => {
