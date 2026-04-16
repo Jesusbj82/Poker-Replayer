@@ -1003,8 +1003,20 @@ function initReplay(hd) {
     cardDefs[heroPosition + '-1'] = { rank: hd.heroCards[1].rank, suit: hd.heroCards[1].suitSymbol, color: hd.heroCards[1].color };
   }
   if (hd.villainCards) {
-    // Assign villain cards to the winner (if villain won) or to the first active non-hero player
-    const villainPos = hd.winner && hd.winner !== heroPosition ? hd.winner : activePlayers.find(p => p !== heroPosition) || 'bb';
+    // Determine which player gets the villain cards:
+    // 1. If villain won, assign to winner position
+    // 2. If hero won, find the opponent who stayed until showdown (didn't fold at any street)
+    let villainPos;
+    if (hd.winner && hd.winner !== heroPosition) {
+      villainPos = hd.winner;
+    } else {
+      // Find all players who folded at ANY street
+      const allFolds = new Set();
+      hd.actions.filter(a => a.action === 'fold').forEach(a => allFolds.add(a.player));
+      // Find active players who never folded (excluding hero)
+      const showdownPlayers = ALL_POSITIONS.filter(p => p !== heroPosition && !allFolds.has(p));
+      villainPos = showdownPlayers[0] || activePlayers.find(p => p !== heroPosition) || 'bb';
+    }
     cardDefs[villainPos + '-0'] = { rank: hd.villainCards[0].rank, suit: hd.villainCards[0].suitSymbol, color: hd.villainCards[0].color };
     cardDefs[villainPos + '-1'] = { rank: hd.villainCards[1].rank, suit: hd.villainCards[1].suitSymbol, color: hd.villainCards[1].color };
   }
@@ -1257,7 +1269,11 @@ function buildSteps(hd) {
   // SHOWDOWN
   if (hd.showdown && hd.winner) {
     const winnerPos = hd.winner;
-    const villainPos = winnerPos !== heroPosition ? winnerPos : activePlayers.find(p => p !== heroPosition);
+    // Find the opponent who reached showdown (never folded)
+    const allFoldsSD = new Set();
+    hd.actions.filter(a => a.action === 'fold').forEach(a => allFoldsSD.add(a.player));
+    const showdownOpponent = ALL_POSITIONS.filter(p => p !== heroPosition && !allFoldsSD.has(p));
+    const villainPos = winnerPos !== heroPosition ? winnerPos : (showdownOpponent[0] || activePlayers.find(p => p !== heroPosition));
     steps.push({fn() {
       lightSeat(null); setAction('💫 Fichas al pozo...');
       collectToPot(pot, 'POT: ' + fmt(pot), () => {
