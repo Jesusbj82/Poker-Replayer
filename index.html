@@ -765,13 +765,23 @@ GGPOKER VALUES:
 - All values in GGPoker screenshots are in BB (big blinds). Convert to chips: multiply by BB amount.
 - If the BB amount is not clear, keep values in BB and set blinds to {sb: 0.5, bb: 1}
 - Stack sizes like "264 BB" = 264 × BB amount
-- If you see dollar amounts like "$3.50" next to each player, these are BOUNTIES (tournament knockout prizes), NOT antes or bets.
+- IMPORTANT: Each player has a DIFFERENT stack size. Read each player's stack individually from the image.
+- Include individual stacks in "playerStacks" field using our position names: {"utg": 128.8, "utg1": 94.6, "lj": number, "hj": number, "co": 264, "btn": 146.3, "sb": 123, "bb": 123.6}
+- "effectiveStack" should be set to Hero's stack
+- If values are in BB, use the BB values directly (e.g. 264 for "264 BB")
+- If you see dollar amounts like "$3.50" next to each player, these are BOUNTIES (tournament knockout prizes), NOT antes or bets or stacks.
 
-BOUNTY DETECTION:
-- In GGPoker bounty/knockout tournaments, each player has a dollar amount shown above or near their seat (e.g. "$3.50")
-- This is the bounty/knockout prize for eliminating that player
-- Include bounties in the JSON output as a "bounties" field: {"utg": 3.50, "utg1": 3.50, ...}
-- If no bounties are visible, omit the bounties field
+BOUNTY DETECTION (IMPORTANT — always check for this):
+- In GGPoker bounty/knockout tournaments, each player has a small dollar amount shown ABOVE or NEAR their seat circle (e.g. "$3.50", "$7", "$12.50")
+- This dollar amount is the BOUNTY/KNOCKOUT prize for eliminating that player
+- ALWAYS check every player seat for these dollar amounts
+- CRITICAL: Bounties are NOT always the same! A player who has eliminated others will have a HIGHER bounty (e.g. $7.00 instead of $3.50). Read EACH player's bounty individually from the image.
+- You MUST include bounties in the JSON output when detected:
+  "bounties": {"utg": 3.50, "utg1": 3.50, "lj": 3.50, "hj": 3.50, "co": 7.00, "btn": 3.50, "sb": 3.50, "bb": 3.50}
+- Use the MAPPED position names (utg, utg1, lj, hj, co, btn, sb, bb), NOT GGPoker names
+- If Hero also has a bounty, include it using Hero's deduced position
+- Different players can have different bounty amounts — READ each one carefully
+- If no bounties are visible, set "bounties": null
 
 CRITICAL PARSING RULES FOR COMPACT NOTATION:
 - Hands are written in a compressed format where streets are separated by the board cards
@@ -892,6 +902,7 @@ OUTPUT FORMAT:
   "blinds": { "sb": number, "bb": number },
   "ante": number or 0,
   "effectiveStack": number,
+  "playerStacks": {"utg": number, "utg1": number, "lj": number, "hj": number, "co": number, "btn": number, "sb": number, "bb": number} or null,
   "heroPosition": "utg"|"utg1"|"lj"|"hj"|"co"|"btn"|"sb"|"bb",
   "heroCards": [{"rank":"Q","suit":"s","suitSymbol":"♠","color":"black"}, {"rank":"8","suit":"s","suitSymbol":"♠","color":"black"}],
   "villainCards": [{"rank":"A","suit":"c","suitSymbol":"♣","color":"black"}, {"rank":"3","suit":"c","suitSymbol":"♣","color":"black"}] or null,
@@ -1039,10 +1050,11 @@ function initReplay(hd) {
     const checkHTML = `<div class="check-label" id="check-${pos}">CHECK</div>`;
     const bountyHTML = (hd.bounties && hd.bounties[pos]) ? 
       `<div class="bounty-badge">$${hd.bounties[pos]}</div>` : '';
+    const playerStack = (hd.playerStacks && hd.playerStacks[pos]) ? hd.playerStacks[pos] : hd.effectiveStack;
     const labelHTML = `<div class="seat-label${isHero?' hero':''}" id="lbl-${pos}" style="position:relative">
       ${bountyHTML}
       <span class="pos">${pos.toUpperCase()}${isHero?' · HERO':''}</span>
-      <div class="name-row"><span class="name">${isHero?'Hero':'Seat '+(slotIdx+1)}</span><span class="stack" id="stk-${pos}">${fmt(hd.effectiveStack)}</span></div>
+      <div class="name-row"><span class="name">${isHero?'Hero':'Seat '+(slotIdx+1)}</span><span class="stack" id="stk-${pos}">${fmt(playerStack)}</span></div>
     </div>`;
     const cardsHTML = `<div class="player-row">
       ${isBottom ? chipZoneHTML : ''}
@@ -1053,9 +1065,18 @@ function initReplay(hd) {
     else seatEl.innerHTML = labelHTML + cardsHTML;
   });
 
-  // Init stacks
+  // Init stacks — use individual stacks if available, otherwise effectiveStack for all
   stacks = {};
-  ALL_POSITIONS.forEach(p => stacks[p] = hd.effectiveStack);
+  if (hd.playerStacks) {
+    ALL_POSITIONS.forEach(p => stacks[p] = hd.playerStacks[p] || hd.effectiveStack);
+    // Update stack displays with individual values
+    ALL_POSITIONS.forEach(p => {
+      const el = $('stk-' + p);
+      if (el) el.textContent = fmt(stacks[p]);
+    });
+  } else {
+    ALL_POSITIONS.forEach(p => stacks[p] = hd.effectiveStack);
+  }
 
   // Build steps from actions
   buildSteps(hd);
@@ -1554,7 +1575,7 @@ function hardReset() {
     const lbl=$('lbl-'+s); if(lbl) lbl.classList.remove('lit','folded');
     [s+'-0',s+'-1'].forEach(cid=>{ const el=$(cid); if(el){ el.style.opacity='0'; el.style.transform=''; el.style.transition=''; el.className='placed-card face-down'; el.innerHTML=''; }});
   });
-  ALL_POSITIONS.forEach(p=>{ stacks[p]=handData.effectiveStack; setStack(p,handData.effectiveStack); });
+  ALL_POSITIONS.forEach(p=>{ const sv=(handData.playerStacks&&handData.playerStacks[p])||handData.effectiveStack; stacks[p]=sv; setStack(p,sv); });
   hideAllChips(); hidePotChips(); hideAllChecks(); hideDealerBtn(); hideAnte();
   $('potDisplay').classList.remove('show');
   $('actionBubble').classList.remove('show');
@@ -1580,7 +1601,7 @@ $('btnPrev').addEventListener('click',()=>{
     document.querySelectorAll('.board-card').forEach(el=>el.classList.remove('show'));
     unfadeAll();
     ALL_POSITIONS.forEach(s=>{ const lbl=$('lbl-'+s); if(lbl) lbl.classList.remove('lit','folded'); [s+'-0',s+'-1'].forEach(cid=>{ const el=$(cid); if(el) el.classList.remove('folded','revealed'); }); });
-    ALL_POSITIONS.forEach(p=>{ stacks[p]=handData.effectiveStack; setStack(p,handData.effectiveStack); });
+    ALL_POSITIONS.forEach(p=>{ const sv=(handData.playerStacks&&handData.playerStacks[p])||handData.effectiveStack; stacks[p]=sv; setStack(p,sv); });
     hideAllChips(); hidePotChips(); hideAllChecks(); hideAnte();
     $('potDisplay').classList.remove('show');
     $('questionBox').classList.remove('show');
