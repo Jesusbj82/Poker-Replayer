@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Poker Top Pro – Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:   #c9a84c;
+  --gold2:  #e0c060;
+  --red:    #cc2200;
+  --green:  #80cc80;
+  --orange: #cc7700;
+  --text:   #f0ece0;
+  --muted:  #4a4640;
+  --bg:     #0a0a0a;
+  --wood:   #3b2006;
+  --wood2:  #5c3510;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto Condensed',sans-serif; overflow:hidden; }
+
+/* ── SCREEN 390×844 centrado ── */
+.screen {
+  width:390px; height:844px; margin:0 auto;
+  display:flex; flex-direction:column; position:relative;
+  background:radial-gradient(ellipse at 50% 30%, #1a1a0a 0%, #0a0a0a 100%);
+}
+
+/* ══════════════ FORM ══════════════ */
+.form-screen {
+  flex:1; display:flex; flex-direction:column; overflow-y:auto;
+  padding:20px 18px 24px;
+}
+.form-screen.hidden { display:none; }
+
+.cards-icon { display:flex; justify-content:center; gap:3px; margin-bottom:14px; }
+.mini-card {
+  width:22px; height:32px; border-radius:3px; border:1px solid #555;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:'Roboto Condensed',sans-serif; font-weight:800; line-height:1;
+}
+.mini-card.back { background:linear-gradient(145deg,#1e3a72,#0d2044); border-color:#2a4a8a; }
+.mini-card.face { background:#f5f0e8; border-color:#bbb; padding:2px; color:#cc2200; }
+.mini-card .mc-rank { font-size:10px; }
+.mini-card .mc-suit  { font-size:8px; }
+
+.form-title {
+  font-family:'Cinzel',serif; color:var(--gold); font-size:1.1rem;
+  letter-spacing:0.15em; text-align:center; margin-bottom:4px;
+  text-shadow:0 0 20px rgba(201,168,76,0.4);
+}
+.form-sub { color:#666; font-size:0.65rem; text-align:center; margin-bottom:18px; letter-spacing:0.04em; }
+
+.form-row { margin-bottom:12px; }
+.form-label {
+  display:block; font-size:0.6rem; color:var(--gold); letter-spacing:0.12em;
+  text-transform:uppercase; margin-bottom:5px; font-weight:700;
+}
+.toggle-group { display:flex; }
+.toggle-btn {
+  flex:1; padding:9px 0; text-align:center; font-size:0.72rem; font-weight:700;
+  letter-spacing:0.08em; border:1.5px solid #333; color:#777;
+  background:rgba(255,255,255,0.03); cursor:pointer; transition:all 0.2s;
+  font-family:'Roboto Condensed',sans-serif;
+}
+.toggle-btn:first-child { border-radius:6px 0 0 6px; }
+.toggle-btn:last-child  { border-radius:0 6px 6px 0; }
+.toggle-btn.active { background:rgba(201,168,76,0.15); border-color:var(--gold); color:var(--gold); }
+
+.input-row { display:flex; gap:8px; }
+.input-row .form-row { flex:1; }
+.form-input {
+  width:100%; padding:9px 11px; font-size:0.8rem; font-family:'Roboto Condensed',sans-serif;
+  background:rgba(255,255,255,0.05); border:1.5px solid #333; border-radius:6px;
+  color:#e0d8c0; outline:none; transition:border-color 0.2s;
+}
+.form-input:focus { border-color:var(--gold); }
+.form-input::placeholder { color:#555; }
+
+.hand-input {
+  width:100%; min-height:100px; padding:10px; font-size:0.75rem;
+  font-family:'Roboto Condensed',sans-serif; line-height:1.5;
+  background:rgba(255,255,255,0.05); border:1.5px solid #333; border-radius:6px;
+  color:#e0d8c0; outline:none; overflow-y:auto; max-height:180px;
+  transition:border-color 0.2s; word-wrap:break-word;
+}
+.hand-input:focus { border-color:var(--gold); }
+.hand-input:empty::before { content:attr(data-placeholder); color:#555; pointer-events:none; }
+.hand-input.drag-over { border-color:var(--gold); background:rgba(201,168,76,0.06); }
+
+.image-preview { display:none; margin-top:6px; position:relative; }
+.image-preview.show { display:block; }
+.image-preview img { max-width:100%; max-height:160px; border-radius:5px; border:1px solid #444; }
+.image-preview .remove-img {
+  position:absolute; top:-7px; right:-7px; width:22px; height:22px;
+  background:#cc4444; border:none; border-radius:50%; color:#fff;
+  font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+
+.form-question {
+  width:100%; min-height:44px; padding:9px 11px; font-size:0.75rem;
+  font-family:'Roboto Condensed',sans-serif;
+  background:rgba(201,168,76,0.04); border:1.5px solid #4a3a18; border-radius:6px;
+  color:#e8d8a0; outline:none; resize:vertical; transition:border-color 0.2s;
+}
+.form-question:focus { border-color:var(--gold); }
+.form-question::placeholder { color:#5a4a28; }
+
+.ante-row { display:none; }
+.ante-row.show { display:block; }
+.divider { height:1px; background:linear-gradient(90deg,transparent,#333,transparent); margin:14px 0; }
+.error-msg { color:#cc4444; font-size:0.65rem; text-align:center; margin-top:8px; display:none; }
+.error-msg.show { display:block; }
+
+.submit-btn {
+  display:block; width:100%; padding:13px 0; font-family:'Cinzel',serif; font-size:0.8rem;
+  font-weight:800; letter-spacing:0.15em; text-transform:uppercase; text-align:center;
+  color:#1a0f00; background:linear-gradient(135deg,#c9a84c,#a07830);
+  border:none; border-radius:8px; cursor:pointer; transition:all 0.2s; margin-top:6px;
+}
+.submit-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+.submit-btn:disabled { opacity:0.5; cursor:wait; transform:none; filter:none; }
+
+/* loading */
+.loading-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88);
+  z-index:5000; flex-direction:column; align-items:center; justify-content:center;
+}
+.loading-overlay.show { display:flex; }
+.loading-spinner {
+  width:36px; height:36px; border:3px solid #333; border-top-color:var(--gold);
+  border-radius:50%; animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { color:var(--gold); font-family:'Cinzel',serif; font-size:0.8rem; letter-spacing:0.15em; margin-top:14px; }
+
+/* ══════════════ REPLAY SCREEN ══════════════ */
+.replay-screen {
+  width:390px; height:844px;
+  display:none; flex-direction:column; position:absolute; top:0; left:0;
+}
+.replay-screen.show { display:flex; }
+
+/* header */
+.hdr {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px 4px; flex-shrink:0; z-index:20;
+}
+.hdr-logo {
+  font-family:'Bebas Neue',sans-serif; font-size:0.95rem;
+  letter-spacing:0.2em; color:var(--gold);
+  text-shadow:0 0 16px rgba(201,168,76,0.35);
+}
+.hdr-right { text-align:right; }
+.hdr-title { font-size:0.68rem; font-weight:700; color:var(--text); }
+.hdr-sub   { font-size:0.55rem; color:var(--muted); letter-spacing:0.06em; }
+
+/* street pill */
+.street-wrap { text-align:center; flex-shrink:0; margin-bottom:2px; }
+.street-pill {
+  display:inline-block; font-family:'Cinzel',serif;
+  font-size:0.75rem; letter-spacing:0.25em; color:var(--gold);
+  text-shadow:0 0 12px rgba(201,168,76,0.6);
+  opacity:0; transition:opacity 0.4s; white-space:nowrap; pointer-events:none;
+}
+.street-pill.show { opacity:1; }
+
+/* table area */
+.table-area {
+  flex:1; position:relative; display:flex; align-items:center; justify-content:center;
+  padding:0 4px; min-height:0;
+}
+
+/* oval table */
+.table {
+  width:374px; height:440px;
+  background:radial-gradient(ellipse at 50% 38%, #1e6040 0%, #124530 40%, #0a2e1a 75%, #061508 100%);
+  border-radius:50%; border:13px solid var(--wood);
+  box-shadow:0 0 0 3px var(--wood2),0 0 0 5px #150800,0 16px 50px rgba(0,0,0,0.85),inset 0 0 50px rgba(0,0,0,0.4);
+  position:relative; overflow:visible;
+}
+.table::before {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.005) 3px,rgba(255,255,255,0.005) 4px);
+  pointer-events:none;
+}
+
+/* dealer btn */
+.dealer-btn {
+  position:absolute; width:24px; height:24px; border-radius:50%;
+  background:linear-gradient(180deg,#fff,#e0ddd5); border:2px solid #ccc;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cinzel',serif; font-size:0.58rem; font-weight:800;
+  color:#222; box-shadow:0 2px 8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.8);
+  z-index:15; opacity:0; transition:opacity 0.4s; pointer-events:none;
+}
+.dealer-btn.show { opacity:1; }
+
+/* street label inside table */
+.street-label {
+  position:absolute; top:5%; left:50%; transform:translateX(-50%);
+  font-family:'Cinzel',serif; font-size:0.8rem; letter-spacing:0.25em;
+  color:var(--gold); text-shadow:0 0 12px rgba(201,168,76,0.6);
+  opacity:0; transition:opacity 0.4s; white-space:nowrap; pointer-events:none;
+}
+.street-label.show { opacity:1; }
+
+/* board */
+.board-area {
+  position:absolute; top:52%; left:50%;
+  transform:translate(-50%,-50%); display:flex; gap:4px; align-items:center;
+}
+.board-card {
+  width:34px; height:48px; border-radius:5px; border:1px solid #ccc;
+  background:#f5f0e8; display:flex; flex-direction:column;
+  align-items:flex-start; justify-content:flex-start; padding:2px 3px;
+  font-family:'Roboto Condensed',sans-serif; font-weight:800;
+  box-shadow:0 3px 10px rgba(0,0,0,0.7);
+  opacity:0; transform:translateY(-8px) scale(0.85); transition:opacity 0.3s,transform 0.3s;
+}
+.board-card.show { opacity:1; transform:translateY(0) scale(1); }
+.board-card.red   { color:var(--red); }
+.board-card.black { color:#111; }
+.board-card .rank { font-size:0.9rem; line-height:1; }
+.board-card .suit { font-size:0.75rem; line-height:1; }
+
+/* pot */
+.pot-display {
+  position:absolute; top:34%; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.7); border:1px solid var(--gold); border-radius:14px;
+  padding:2px 10px; font-size:0.63rem; color:#f0d080;
+  letter-spacing:0.08em; white-space:nowrap; opacity:0; transition:opacity 0.4s;
+}
+.pot-display.show { opacity:1; }
+
+/* pot chips */
+.pot-chip-zone {
+  position:absolute; top:16%; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  opacity:0; transition:opacity 0.4s; pointer-events:none; z-index:10;
+}
+.pot-chip-zone.show { opacity:1; }
+.pot-chip-label {
+  font-size:0.6rem; font-weight:700; color:#f0d080;
+  background:rgba(0,0,0,0.88); border:1px solid rgba(201,168,76,0.3);
+  border-radius:6px; padding:1px 6px; margin-top:2px;
+  letter-spacing:0.05em; white-space:nowrap;
+}
+
+/* ante */
+.ante-zone {
+  position:absolute; top:42%; left:58%;
+  display:flex; align-items:center; gap:3px;
+  opacity:0; transition:opacity 0.4s; pointer-events:none; z-index:10;
+}
+.ante-zone.show { opacity:1; }
+.ante-label {
+  font-size:0.5rem; font-weight:700; color:#d4a050;
+  background:rgba(0,0,0,0.7); border:1px solid #886633;
+  border-radius:5px; padding:1px 5px; letter-spacing:0.06em; white-space:nowrap;
+}
+
+/* flying */
+.flying-chip {
+  position:fixed; z-index:3000; pointer-events:none;
+  width:24px; height:9px; border-radius:50%;
+  box-shadow:0 2px 5px rgba(0,0,0,0.7);
+  transition:left 0.42s cubic-bezier(0.4,0,0.2,1),top 0.42s cubic-bezier(0.4,0,0.2,1),opacity 0.42s;
+}
+.flying-card {
+  position:fixed; width:30px; height:44px; border-radius:5px;
+  z-index:2000; pointer-events:none; box-shadow:0 4px 14px rgba(0,0,0,0.8);
+  backface-visibility:hidden; background:linear-gradient(145deg,#1e3a72,#0d2044);
+  border:1px solid #2a4a8a;
+}
+
+/* ── SEATS (5-max vertical layout) ── */
+.player {
+  position:absolute; display:flex; flex-direction:column; align-items:center; gap:3px;
+  z-index:10; transition:opacity 0.5s;
+}
+.player.faded { opacity:0.15; pointer-events:none; }
+
+/* 5 positions — Hero always bottom center */
+.slot0 { bottom:-2%;  left:50%;  transform:translateX(-50%); }  /* Hero */
+.slot1 { top:50%;     left:-22%; transform:translateY(-50%); }  /* BTN/left */
+.slot2 { top:-14%;    left:5%;   }                               /* top-left */
+.slot3 { top:-14%;    right:5%;  }                               /* top-right */
+.slot4 { top:50%;     right:-22%;transform:translateY(-50%); }  /* CO/right */
+
+/* seat label */
+.seat-label {
+  background:rgba(0,0,0,0.88); border:1.5px solid #333;
+  border-radius:9px; padding:5px 10px; text-align:center;
+  white-space:nowrap; transition:border-color 0.25s,box-shadow 0.25s,opacity 0.4s;
+  min-width:66px; position:relative;
+}
+.seat-label .pos {
+  display:block; font-size:0.65rem; color:var(--gold); font-weight:700;
+  letter-spacing:0.15em; margin-bottom:2px; font-family:'Cinzel',serif;
+  text-shadow:0 0 8px rgba(201,168,76,0.35);
+}
+.name-row { display:flex; align-items:center; gap:5px; justify-content:center; }
+.seat-label .name { font-size:0.78rem; color:#fff; font-weight:700; letter-spacing:0.04em; }
+.stack {
+  font-size:0.62rem; color:var(--green); font-weight:700;
+  background:rgba(0,80,0,0.25); border:1px solid #2a5a2a; border-radius:4px; padding:0 5px;
+}
+.seat-label.hero { border-color:var(--gold); border-width:2px; background:rgba(0,0,0,0.92); box-shadow:0 0 16px rgba(201,168,76,0.25); }
+.seat-label.hero .pos  { font-size:0.7rem; color:#e8c84a; }
+.seat-label.hero .name { font-size:0.85rem; }
+.seat-label.hero .stack { color:#90dd90; border-color:#3a7a3a; }
+.seat-label.lit    { border-color:#fff !important; box-shadow:0 0 12px rgba(255,255,255,0.35) !important; }
+.seat-label.folded { opacity:0.25; }
+
+.bounty-badge {
+  position:absolute; top:-8px; right:-8px;
+  background:linear-gradient(135deg,#c9a84c,#a07830);
+  color:#1a0f00; font-size:0.48rem; font-weight:800;
+  padding:1px 5px; border-radius:6px; white-space:nowrap; z-index:5;
+  box-shadow:0 2px 6px rgba(0,0,0,0.5);
+}
+
+.player-row { display:flex; align-items:center; gap:5px; }
+.hole-cards { display:flex; gap:3px; min-height:44px; align-items:center; position:relative; }
+
+/* hole card */
+.placed-card {
+  width:30px; height:44px; border-radius:5px; border:1px solid #bbb;
+  background:#f5f0e8; display:flex; flex-direction:column;
+  align-items:flex-start; justify-content:flex-start; padding:2px 3px;
+  font-family:'Roboto Condensed',sans-serif; font-weight:800;
+  box-shadow:0 2px 8px rgba(0,0,0,0.6);
+  opacity:0; transition:opacity 0.01s,transform 0.15s;
+}
+.placed-card.face-down { background:linear-gradient(145deg,#1e3a72,#0d2044); border-color:#2a4a8a; }
+.placed-card.folded { opacity:0.15 !important; }
+.placed-card.red   { color:var(--red); }
+.placed-card.black { color:#111; }
+.placed-card .rank { font-size:0.8rem; line-height:1; }
+.placed-card .suit { font-size:0.68rem; line-height:1; }
+@keyframes revealGlow {
+  0%   { box-shadow:0 2px 8px rgba(0,0,0,0.6); }
+  50%  { box-shadow:0 0 16px rgba(201,168,76,0.6),0 0 30px rgba(201,168,76,0.3); }
+  100% { box-shadow:0 2px 8px rgba(0,0,0,0.6); }
+}
+.placed-card.revealed { animation:revealGlow 0.8s ease-out; }
+
+/* check label */
+.check-label {
+  font-size:0.58rem; font-weight:900; color:#fff; letter-spacing:0.12em;
+  text-transform:uppercase; text-align:center; opacity:0; transition:opacity 0.3s;
+  white-space:nowrap; text-shadow:0 0 8px rgba(255,255,255,0.4);
+  position:absolute; left:50%; transform:translateX(-50%);
+  z-index:20; pointer-events:none; background:rgba(0,0,0,0.55); padding:1px 6px; border-radius:4px;
+}
+.check-label.show { opacity:1; }
+
+/* chip zone */
+.chip-zone {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  min-width:34px; opacity:0; transition:opacity 0.3s; pointer-events:none;
+}
+.chip-zone.show { opacity:1; }
+.chip-stack { display:flex; flex-direction:column-reverse; align-items:center; }
+.chip {
+  width:24px; height:9px; border-radius:50%; margin-bottom:-3px; position:relative;
+  box-shadow:0 1px 4px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.chip::after { content:''; position:absolute; inset:1px 3px; border-radius:50%; border:1px dashed rgba(255,255,255,0.18); }
+.chip.c1   { background:linear-gradient(180deg,#f0f0f0,#c8c8c8); }
+.chip.c5   { background:linear-gradient(180deg,#e83010,#aa1800); }
+.chip.c10  { background:linear-gradient(180deg,#3366dd,#1a3a99); }
+.chip.c25  { background:linear-gradient(180deg,#33aa55,#1a6633); }
+.chip.c100 { background:linear-gradient(180deg,#222,#000); }
+.chip.c500 { background:linear-gradient(180deg,#aa33cc,#661a88); }
+
+.chip-amount { display:flex; flex-direction:column; align-items:center; gap:0; margin-top:2px; }
+.chip-float .chip-stack { display:flex; flex-direction:column-reverse; align-items:center; }
+.chip-action {
+  font-size:0.52rem; font-weight:900; letter-spacing:0.1em;
+  padding:1px 4px; border-radius:3px 3px 0 0; white-space:nowrap;
+  background:var(--orange); color:#fff;
+}
+.chip-action.blind { background:#557799; }
+.chip-action.ante  { background:#886633; }
+.chip-action.allin { background:#cc2200; }
+.chip-value {
+  font-size:0.55rem; font-weight:700; color:#f0d080;
+  background:rgba(0,0,0,0.85); border-radius:0 0 3px 3px; padding:1px 4px; white-space:nowrap;
+}
+
+/* ── CHIP POSITIONS — fixed inside table per seat ── */
+.chip-float {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 12;
+}
+.chip-float.show { opacity: 1; }
+
+/* Each seat's chip zone inside table */
+/* slot0 = Hero (bottom center) */
+.chip-pos-0 { bottom: 22%; left: 50%; transform: translateX(-50%); }
+/* slot1 = BTN (left) */
+.chip-pos-1 { top: 48%; left: 7%; transform: translateY(-50%); }
+/* slot2 = top-left */
+.chip-pos-2 { top: 10%; left: 22%; }
+/* slot3 = top-right (SB) */
+.chip-pos-3 { top: 10%; right: 22%; }
+/* slot4 = CO (right) */
+.chip-pos-4 { top: 48%; right: 7%; transform: translateY(-50%); }
+
+/* action bubble — bottom left of table */
+.action-wrap { position:absolute; bottom:5%; left:3%; width:auto; }
+.action-bubble {
+  display:inline-block; background:rgba(0,0,0,0.85);
+  border:1px solid rgba(201,168,76,0.35); border-radius:8px;
+  padding:3px 10px; font-size:0.6rem; color:#f0e8d0;
+  letter-spacing:0.04em; opacity:0; transform:translateX(-5px);
+  transition:opacity 0.3s,transform 0.3s; white-space:nowrap; max-width:220px;
+}
+.action-bubble.show { opacity:1; transform:translateX(0); }
+
+/* bottom panel */
+.bottom {
+  flex-shrink:0; display:flex; flex-direction:column; padding:5px 14px 10px; gap:5px;
+}
+
+/* progress */
+.progress-bar { height:2px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:2px; transition:width 0.5s; width:0%; }
+
+/* controls */
+.controls { display:flex; gap:8px; align-items:center; justify-content:center; }
+.ctrl-btn {
+  width:36px; height:36px; border-radius:50%; border:1.5px solid #555;
+  background:rgba(0,0,0,0.5); color:#aaa; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.ctrl-btn:hover { border-color:var(--gold); color:var(--gold); }
+.ctrl-btn.primary { width:44px; height:44px; border-color:var(--gold); color:var(--gold); background:rgba(201,168,76,0.1); }
+.ctrl-btn.primary:hover { background:rgba(201,168,76,0.2); }
+.ctrl-btn.restart-btn { color:var(--gold); border-color:#6a5020; }
+.ctrl-btn svg { width:13px; height:13px; fill:currentColor; }
+.ctrl-btn.primary svg { width:17px; height:17px; }
+
+/* question */
+.question-box {
+  background:#0f1a0a; border:1px solid var(--gold); border-radius:10px;
+  padding:10px 14px; font-size:0.7rem; color:#e8d8a0; line-height:1.55;
+  opacity:0; transition:opacity 0.6s; display:none;
+}
+.question-box.show { opacity:1; display:block; }
+.question-box .q-label {
+  font-family:'Cinzel',serif; font-size:0.58rem; color:var(--gold);
+  letter-spacing:0.18em; display:block; margin-bottom:4px;
+}
+
+/* bottom actions */
+.bottom-actions { display:flex; gap:8px; justify-content:center; padding-bottom:2px; }
+.new-hand-btn {
+  padding:7px 18px; font-family:'Roboto Condensed',sans-serif; font-size:0.65rem; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--gold);
+  border:1px solid var(--gold); border-radius:6px; background:transparent; cursor:pointer;
+}
+.new-hand-btn:hover { background:rgba(201,168,76,0.1); }
+.share-btn {
+  padding:7px 18px; font-family:'Roboto Condensed',sans-serif; font-size:0.65rem; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:#1a0f00;
+  background:linear-gradient(135deg,#c9a84c,#a07830); border:none; border-radius:6px; cursor:pointer;
+}
+.share-toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.92); border:1px solid var(--gold); border-radius:8px;
+  padding:8px 20px; font-size:0.7rem; color:var(--gold); letter-spacing:0.06em;
+  opacity:0; transition:opacity 0.4s; pointer-events:none; z-index:3000;
+}
+.share-toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- ══ FORM ══ -->
+  <div class="form-screen" id="formWrap">
+    <div class="cards-icon">
+      <div class="mini-card back"></div>
+      <div class="mini-card face"><span class="mc-rank">A</span><span class="mc-suit">&#9830;</span></div>
+      <div class="mini-card face"><span class="mc-rank">A</span><span class="mc-suit">&#9829;</span></div>
+      <div class="mini-card back"></div>
+    </div>
+    <div class="form-title">Hand Replay</div>
+    <div class="form-sub">Pega tu mano y genera el replay al instante</div>
+
+    <div class="form-row">
+      <span class="form-label">Tipo de juego</span>
+      <div class="toggle-group">
+        <div class="toggle-btn active" id="tCash" onclick="setType('cash')">Cash</div>
+        <div class="toggle-btn" id="tTorneo" onclick="setType('torneo')">Torneo</div>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <div class="form-row">
+        <span class="form-label">Blinds <span style="color:#555;font-weight:400">(opcional)</span></span>
+        <input class="form-input" type="text" id="fBlinds" placeholder="ej: 5/10" />
+      </div>
+      <div class="form-row">
+        <span class="form-label">Stack <span style="color:#555;font-weight:400">(opcional)</span></span>
+        <input class="form-input" type="text" id="fStack" placeholder="ej: 2000" />
+      </div>
+    </div>
+
+    <div class="form-row ante-row" id="anteRow">
+      <span class="form-label">Ante <span style="color:#555;font-weight:400">(opcional)</span></span>
+      <input class="form-input" type="text" id="fAnte" placeholder="ej: 200" />
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-row">
+      <span class="form-label">Pega tu mano aquí <span style="color:#555;font-weight:400">(texto o imagen)</span></span>
+      <div class="hand-input" id="fHand" contenteditable="true" data-placeholder="Pega texto, arrastra o pega (Ctrl+V) una imagen de GGPoker / PokerStars"></div>
+      <div class="image-preview" id="imagePreview"></div>
+    </div>
+
+    <div class="form-row">
+      <span class="form-label">Pregunta de la mano</span>
+      <textarea class="form-question" id="fQuestion" placeholder="ej: ¿Debí hacer 4-bet preflop con QQ?" rows="2"></textarea>
+    </div>
+
+    <div class="submit-btn" id="btnGenerate">Generar Replay</div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- loading -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Analizando mano...</div>
+  </div>
+
+  <!-- ══ REPLAY ══ -->
+  <div class="replay-screen" id="replayWrap">
+
+    <div class="hdr">
+      <div class="hdr-logo">♠ POKER TOP PRO</div>
+      <div class="hdr-right">
+        <div class="hdr-title" id="hdrTitle">—</div>
+        <div class="hdr-sub" id="hdrSub">STACK: —</div>
+      </div>
+    </div>
+
+    <div class="street-wrap"><span class="street-pill" id="streetPill"></span></div>
+
+    <div class="table-area">
+      <div class="table" id="table">
+        <div class="dealer-btn" id="dealerBtn">D</div>
+        <div class="street-label" id="streetLabel"></div>
+        <div class="board-area" id="boardArea"></div>
+        <div class="pot-display" id="potDisplay">POT: 0</div>
+        <div class="pot-chip-zone" id="potChipZone">
+          <div class="chip-stack" id="potChipStack"></div>
+          <div class="pot-chip-label" id="potChipLabel"></div>
+        </div>
+        <div class="ante-zone" id="anteZone">
+          <div class="chip-stack" id="anteChipStack"></div>
+          <div class="ante-label" id="anteLabel"></div>
+        </div>
+        <!-- 5 seats: slot0=Hero(bottom), slot1=left, slot2=top-left, slot3=top-right, slot4=right -->
+        <div class="player" id="seat-0"></div>
+        <div class="player" id="seat-1"></div>
+        <div class="player" id="seat-2"></div>
+        <div class="player" id="seat-3"></div>
+        <div class="player" id="seat-4"></div>
+        <!-- extra seats hidden for 5-max -->
+        <div class="player" id="seat-5" style="display:none"></div>
+        <div class="player" id="seat-6" style="display:none"></div>
+        <div class="player" id="seat-7" style="display:none"></div>
+        <div class="action-wrap"><div class="action-bubble" id="actionBubble"></div></div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="controls">
+        <button class="ctrl-btn restart-btn" id="btnStop" title="Repetir">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btnPrev" title="Anterior">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="ctrl-btn primary" id="btnPlayPause" title="Play/Pausa">
+          <svg viewBox="0 0 24 24" id="iconPlay"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btnNext" title="Siguiente">
+          <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="question-box" id="questionBox">
+        <span class="q-label">❓ PREGUNTA DEL JUGADOR</span>
+        <span id="questionText"></span>
+      </div>
+      <div class="bottom-actions">
+        <button class="new-hand-btn" id="btnNewHand">Nueva Mano</button>
+        <button class="share-btn" id="btnShare">Compartir</button>
+      </div>
+    </div>
+
+  </div><!-- /replay-screen -->
+
+</div><!-- /screen -->
+<div class="share-toast" id="shareToast">Link copiado al portapapeles</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ═══ CONFIG ═══
+const API_URL = 'https://pokerreplayer.pokertopprous25.workers.dev/';
+const ALL_POSITIONS = ['utg','utg1','lj','hj','co','btn','sb','bb'];
+// 5-max slot classes — vertical layout
+const SLOT_CLASSES = ['slot0','slot1','slot2','slot3','slot4','slot4','slot4','slot4'];
+
+// ══════════════════════════════════════════
+// IMAGE HANDLING
+// ══════════════════════════════════════════
+let pastedImageBase64 = null, pastedImageType = null;
+const handInput = $('fHand'), imagePreview = $('imagePreview');
+
+function handleImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  pastedImageType = file.type;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pastedImageBase64 = e.target.result.split(',')[1];
+    imagePreview.innerHTML = `<img src="${e.target.result}"><button class="remove-img" onclick="removeImage()">✕</button>`;
+    imagePreview.classList.add('show');
+    handInput.innerHTML = '';
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage() {
+  pastedImageBase64 = null; pastedImageType = null;
+  imagePreview.innerHTML = ''; imagePreview.classList.remove('show');
+}
+handInput.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) { e.preventDefault(); handleImageFile(item.getAsFile()); return; }
+  }
+  e.preventDefault();
+  document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+});
+handInput.addEventListener('dragover', e => { e.preventDefault(); handInput.classList.add('drag-over'); });
+handInput.addEventListener('dragleave', () => handInput.classList.remove('drag-over'));
+handInput.addEventListener('drop', e => {
+  e.preventDefault(); handInput.classList.remove('drag-over');
+  if (e.dataTransfer?.files?.length) handleImageFile(e.dataTransfer.files[0]);
+});
+
+// ══════════════════════════════════════════
+// FORM LOGIC
+// ══════════════════════════════════════════
+let gameType = 'cash';
+function setType(t) {
+  gameType = t;
+  $('tCash').classList.toggle('active', t==='cash');
+  $('tTorneo').classList.toggle('active', t==='torneo');
+  $('anteRow').classList.toggle('show', t==='torneo');
+}
+
+$('btnGenerate').addEventListener('click', async () => {
+  const blinds = $('fBlinds').value.trim();
+  const stack  = $('fStack').value.trim();
+  const ante   = $('fAnte').value.trim();
+  const hand   = $('fHand').innerText.trim();
+  const question = $('fQuestion').value.trim();
+  if (!hand && !pastedImageBase64) {
+    $('errorMsg').textContent = 'Por favor pega tu mano (texto o imagen).';
+    $('errorMsg').classList.add('show'); return;
+  }
+  $('errorMsg').classList.remove('show');
+  $('btnGenerate').disabled = true;
+  $('btnGenerate').textContent = 'Analizando...';
+  $('loadingOverlay').classList.add('show');
+  try {
+    const hd = await parseHandWithClaude(gameType, blinds, stack, ante, hand, question, pastedImageBase64, pastedImageType);
+    hd.question = question || hd.question || '';
+    currentHandData = hd;
+    try { history.replaceState(null,'',window.location.pathname+'?h='+encodeHandToURL(hd)); } catch(e){}
+    $('loadingOverlay').classList.remove('show');
+    $('formWrap').classList.add('hidden');
+    $('replayWrap').classList.add('show');
+    initReplay(hd);
+  } catch(err) {
+    $('loadingOverlay').classList.remove('show');
+    $('errorMsg').textContent = 'Error al analizar la mano. Intenta de nuevo.';
+    $('errorMsg').classList.add('show');
+    console.error(err);
+  }
+  $('btnGenerate').disabled = false;
+  $('btnGenerate').textContent = 'Generar Replay';
+});
+
+$('btnNewHand').addEventListener('click', () => {
+  $('replayWrap').classList.remove('show');
+  $('formWrap').classList.remove('hidden');
+  removeImage(); $('fHand').innerHTML = '';
+  try { history.replaceState(null,'',window.location.pathname); } catch(e){}
+});
+
+// SHARE
+let currentHandData = null;
+function encodeHandToURL(hd){ return btoa(unescape(encodeURIComponent(JSON.stringify(hd)))); }
+function decodeHandFromURL(p){ return JSON.parse(decodeURIComponent(escape(atob(p)))); }
+$('btnShare').addEventListener('click', () => {
+  if (!currentHandData) return;
+  const url = window.location.origin+window.location.pathname+'?h='+encodeHandToURL(currentHandData);
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url).then(showToast).catch(()=>fallbackCopy(url));
+  else fallbackCopy(url);
+});
+function fallbackCopy(t){ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');showToast();}catch(e){prompt('Copia este link:',t);} document.body.removeChild(ta); }
+function showToast(){ $('shareToast').classList.add('show'); setTimeout(()=>$('shareToast').classList.remove('show'),2500); }
+
+window.addEventListener('load', () => {
+  const p = new URLSearchParams(window.location.search).get('h');
+  if (p) { try { const hd=decodeHandFromURL(p); currentHandData=hd; $('formWrap').classList.add('hidden'); $('replayWrap').classList.add('show'); initReplay(hd); } catch(e){console.error(e);} }
+});
+
+// ══════════════════════════════════════════
+// CLAUDE API
+// ══════════════════════════════════════════
+async function parseHandWithClaude(type,blinds,stack,ante,handText,question,imageBase64,imageType) {
+  const systemPrompt = `You are an expert poker hand parser. Parse free-text poker hands OR poker hand screenshots (from GGPoker, PokerStars, 888poker, etc.) into structured JSON. Return ONLY valid JSON — no markdown, no backticks, no explanation.
+
+WHEN READING AN IMAGE:
+- Read the screenshot carefully. Look for: player positions, stack sizes, cards, board cards, pot size, and the action history panel.
+- GGPoker shows actions in a panel at the bottom with columns: Ciegas/Ante, Pre-Flop, Flop, Turn, River
+- Extract ALL actions from the image: raises, calls, checks, folds, bets, all-ins
+- Read the hero's cards (face up) and any shown villain cards
+- Read the board cards (flop, turn, river) with correct suits and colors
+
+GGPOKER POSITION MAPPING (8-max): UTG=utg, UTG1=utg1, MP=lj, MP1=hj, CO=co, BTN=btn, SB=sb, BB=bb
+CRITICAL HERO POSITION RULE: Find which position is MISSING from other players' labels — that's Hero's position.
+
+GGPOKER SPANISH TERMS: "Subir X BB"=raise, "Igualar X BB"=call, "No ir"=fold, "Pasar"=check, "Apostar X BB"=bet, "CP 0.5 BB"=post SB, "CG 1 BB"=post BB
+
+GGPOKER ANTE: BB posts full ante. Set "ante" to total ante amount.
+
+ACTION PARSING: cb/cbet=continuation bet, CCB=call c-bet (2 actions), xc=check-call, xr=check-raise, xf=check-fold (3 actions), xx=check-check, Donk=out-of-position bet, allin/push/jam=all-in
+
+SUIT PARSING: ss=spades, cc=clubs, hh=hearts, dd=diamonds. K9hh=K♥9♥, A3cc=A♣3♣
+
+CARD FORMAT: KQo=offsuit, KQs=suited, 88=pocket pair
+
+OUTPUT FORMAT:
+{"gameType":"cash","blinds":{"sb":5,"bb":10},"ante":0,"effectiveStack":2000,"playerStacks":null,"heroPosition":"hj","heroCards":[{"rank":"Q","suit":"s","suitSymbol":"♠","color":"black"},{"rank":"8","suit":"s","suitSymbol":"♠","color":"black"}],"villainCards":null,"board":{"flop":null,"turn":null,"river":null},"actions":[{"street":"preflop","player":"utg","action":"fold"}],"winner":null,"showdown":false,"question":"","bounties":null}
+
+Suits: s=♠(black), c=♣(black), h=♥(red), d=♦(red)
+Include ALL folds from non-participating players.
+OOP acts first post-flop.`;
+
+  const userMsg = `Game type: ${type}\n${blinds?'Blinds: '+blinds:'Blinds: extract from hand'}\n${stack?'Stack: '+stack:'Stack: extract from hand'}\n${ante?'Ante: '+ante:''}\n${handText?'Hand: '+handText:''}\n${question?'Question: '+question:''}`;
+  let messageContent = imageBase64 ? [{ type:"image", source:{ type:"base64", media_type:imageType, data:imageBase64 }},{ type:"text", text:userMsg }] : userMsg;
+
+  const response = await fetch(API_URL, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000, system:systemPrompt, messages:[{role:"user",content:messageContent}] })
+  });
+  const data = await response.json();
+  const text = data.content.map(c=>c.text||'').join('');
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+// ══════════════════════════════════════════
+// REPLAY ENGINE
+// ══════════════════════════════════════════
+let handData, seatMap, heroPosition, activePlayers, stacks, cardDefs;
+let phase, dealIndex, stepIndex, playing, autoTimer, steps;
+const STEP_DELAY = 2400;
+function fmt(n){ return typeof n==='number' ? n.toLocaleString() : n; }
+
+function initReplay(hd) {
+  handData = hd; heroPosition = hd.heroPosition;
+
+  // Update header
+  $('hdrTitle').textContent = heroPosition.toUpperCase() + ' · ' + (hd.gameType==='tournament'?'MTT':'Cash');
+  $('hdrSub').textContent = 'STACK: ' + fmt(hd.effectiveStack);
+
+  // Seat map — hero always slot0
+  const heroIdx = ALL_POSITIONS.indexOf(heroPosition);
+  seatMap = [];
+  for (let i=0; i<8; i++) seatMap.push(ALL_POSITIONS[(heroIdx+i)%8]);
+
+  // Show only 5 seats for 5-max display
+  for (let i=0; i<8; i++) {
+    const s = $('seat-'+i);
+    s.style.display = i < 5 ? '' : 'none';
+  }
+
+  // Active players
+  const preflopFolds = new Set();
+  hd.actions.filter(a=>a.street==='preflop'&&a.action==='fold').forEach(a=>preflopFolds.add(a.player));
+  activePlayers = ALL_POSITIONS.filter(p=>!preflopFolds.has(p));
+
+  // Card defs
+  cardDefs = {};
+  if (hd.heroCards) {
+    cardDefs[heroPosition+'-0'] = { rank:hd.heroCards[0].rank, suit:hd.heroCards[0].suitSymbol, color:hd.heroCards[0].color };
+    cardDefs[heroPosition+'-1'] = { rank:hd.heroCards[1].rank, suit:hd.heroCards[1].suitSymbol, color:hd.heroCards[1].color };
+  }
+  if (hd.villainCards) {
+    let villainPos;
+    if (hd.winner && hd.winner !== heroPosition) villainPos = hd.winner;
+    else {
+      const allFolds = new Set(); hd.actions.filter(a=>a.action==='fold').forEach(a=>allFolds.add(a.player));
+      villainPos = ALL_POSITIONS.find(p=>p!==heroPosition&&!allFolds.has(p)) || activePlayers.find(p=>p!==heroPosition) || 'bb';
+    }
+    cardDefs[villainPos+'-0'] = { rank:hd.villainCards[0].rank, suit:hd.villainCards[0].suitSymbol, color:hd.villainCards[0].color };
+    cardDefs[villainPos+'-1'] = { rank:hd.villainCards[1].rank, suit:hd.villainCards[1].suitSymbol, color:hd.villainCards[1].color };
+  }
+  const usedSet = new Set(); Object.values(cardDefs).forEach(c=>usedSet.add(c.rank+c.suit));
+  const suits=['♠','♣','♥','♦'], ranks=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+  function rndCard(){ let c; do{c=ranks[Math.floor(Math.random()*13)]+suits[Math.floor(Math.random()*4)];}while(usedSet.has(c)); usedSet.add(c); const s=c.slice(-1); return{rank:c.slice(0,-1),suit:s,color:(s==='♥'||s==='♦')?'red':'black'}; }
+  ALL_POSITIONS.forEach(p=>{ if(!cardDefs[p+'-0']){cardDefs[p+'-0']=rndCard();cardDefs[p+'-1']=rndCard();} });
+
+  // Board
+  const boardArea = $('boardArea'); boardArea.innerHTML = '';
+  const allBoard = [];
+  if (hd.board.flop) allBoard.push(...hd.board.flop);
+  if (hd.board.turn) allBoard.push(hd.board.turn);
+  if (hd.board.river) allBoard.push(hd.board.river);
+  allBoard.forEach((card,i)=>{
+    const div=document.createElement('div'); div.className='board-card '+card.color; div.id='bc'+(i+1);
+    div.innerHTML=`<span class="rank">${card.rank}</span><span class="suit">${card.suitSymbol}</span>`;
+    boardArea.appendChild(div);
+  });
+
+  // Question
+  const qText = hd.question||'';
+  $('questionText').textContent = qText;
+  $('questionBox').style.display = qText ? '' : 'none';
+
+  // Build seats
+  const playersWithActions = new Set(['sb','bb']);
+  hd.actions.forEach(a=>playersWithActions.add(a.player));
+
+  // Only build visible seats (0-4 for 5-max)
+  // For hidden positions, create minimal invisible elements for chip/card references
+  seatMap.forEach((pos,slotIdx)=>{
+    const seatEl = $('seat-'+slotIdx);
+    if (slotIdx >= 5) {
+      // Hidden seat — create invisible chip/card refs so engine doesn't break
+      seatEl.innerHTML = `
+        <div class="chip-zone" id="chips-${pos}" style="display:none"><div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div></div>
+        <div class="placed-card face-down" id="${pos}-0" style="display:none"></div>
+        <div class="placed-card face-down" id="${pos}-1" style="display:none"></div>
+        <div class="seat-label" id="lbl-${pos}" style="display:none"></div>
+        <div class="check-label" id="check-${pos}" style="display:none"></div>
+        <span id="stk-${pos}" style="display:none"></span>`;
+      return;
+    }
+    seatEl.className = 'player ' + SLOT_CLASSES[slotIdx];
+    const isHero = pos===heroPosition;
+    const isBottom = slotIdx===0;
+    const chipZoneHTML = playersWithActions.has(pos) ?
+      `<div class="chip-zone" id="chips-${pos}"><div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div></div>` : '';
+    const checkHTML = `<div class="check-label" id="check-${pos}">CHECK</div>`;
+    const bountyHTML = (hd.bounties&&hd.bounties[pos]) ? `<div class="bounty-badge">$${hd.bounties[pos]}</div>` : '';
+    const playerStack = (hd.playerStacks&&hd.playerStacks[pos]) ? hd.playerStacks[pos] : hd.effectiveStack;
+    const labelHTML = `<div class="seat-label${isHero?' hero':''}" id="lbl-${pos}" style="position:relative">
+      ${bountyHTML}
+      <span class="pos">${pos.toUpperCase()}${isHero?' · HERO':''}</span>
+      <div class="name-row"><span class="name">${isHero?'Hero':'Seat '+(slotIdx+1)}</span><span class="stack" id="stk-${pos}">${fmt(playerStack)}</span></div>
+    </div>`;
+    const cardsHTML = `<div class="player-row">
+      <div class="hole-cards"><div class="placed-card face-down" id="${pos}-0"></div><div class="placed-card face-down" id="${pos}-1"></div>${checkHTML}</div>
+    </div>`;
+    seatEl.innerHTML = isBottom ? (cardsHTML + labelHTML) : (labelHTML + cardsHTML);
+
+    // Add floating chip zone inside table
+    if (playersWithActions.has(pos)) {
+      const tableEl = $('table');
+      const existingChip = $('chips-'+pos);
+      if (!existingChip) {
+        const chipDiv = document.createElement('div');
+        chipDiv.className = 'chip-float chip-pos-' + slotIdx;
+        chipDiv.id = 'chips-' + pos;
+        chipDiv.innerHTML = `<div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div>`;
+        tableEl.appendChild(chipDiv);
+      }
+    }
+  });
+
+  // Stacks
+  stacks = {};
+  ALL_POSITIONS.forEach(p => stacks[p] = (hd.playerStacks&&hd.playerStacks[p]) || hd.effectiveStack);
+
+  buildSteps(hd);
+  phase='blinds'; dealIndex=0; stepIndex=0; playing=false;
+  setTimeout(postBlindsAndDeal, 500);
+}
+
+// ══ STEP BUILDER ══
+function buildSteps(hd) {
+  steps = [];
+  let pot = hd.blinds.sb + hd.blinds.bb + (hd.ante||0);
+  const invested = {}; ALL_POSITIONS.forEach(p=>invested[p]=0);
+  const streets = ['preflop','flop','turn','river'];
+
+  streets.forEach(street => {
+    const streetActions = hd.actions.filter(a=>a.street===street);
+    if (streetActions.length===0) return;
+
+    if (street==='preflop') steps.push({fn(){setStreet('PREFLOP');}});
+
+    if (street==='flop') {
+      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte(); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); setStreet('FLOP'); setPot('POT: '+fmt(pot));
+        seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)) $('seat-'+si).classList.add('faded'); });
+        showBoardCard('bc1',0); showBoardCard('bc2',140); showBoardCard('bc3',280);
+        setAction('🂠 Flop: '+hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  ')); }});
+    }
+    if (street==='turn') {
+      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); setStreet('TURN'); setPot('POT: '+fmt(pot)); showBoardCard('bc4',0); setAction('🂠 Turn: '+hd.board.turn.rank+hd.board.turn.suitSymbol); }});
+    }
+    if (street==='river') {
+      const turnBets = hd.actions.filter(a=>a.street==='turn'&&['bet','raise','call','allin'].includes(a.action));
+      if (turnBets.length>0) steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: '+fmt(pot)); showBoardCard('bc5',0); setAction('🂠 River: '+hd.board.river.rank+hd.board.river.suitSymbol); }});
+    }
+
+    streetActions.forEach(act => {
+      const p=act.player, lbl='lbl-'+p, isHero=p===heroPosition, name=isHero?'Hero':p.toUpperCase();
+      switch(act.action) {
+        case 'fold':
+          steps.push({fn(){ lightSeat(lbl); if(street==='preflop'&&$('chips-'+p))hideChips(p); setAction('❌ '+name+' fold'); foldSeat(p); }}); break;
+        case 'check':
+          steps.push({fn(){ lightSeat(lbl); hideAllChecks(); showCheck(p); setAction('✋ '+name+' check'); }}); break;
+        case 'call': case 'limp': {
+          const amt=act.amount||0;
+          const actName=act.action==='limp'?'limp':'call';
+          steps.push({fn(){
+            lightSeat(lbl); hideAllChecks();
+            if(amt>0){ showChips(p,amt,fmt(amt),actName); let d=amt; if(street==='preflop'){if(p==='bb')d=amt-hd.blinds.bb;else if(p==='sb')d=amt-hd.blinds.sb;} if(d>0){stacks[p]-=d;setStack(p,stacks[p]);pot+=d;} }
+            setPot('POT: '+fmt(pot)); setAction('✅ '+name+' '+actName+' '+fmt(amt));
+          }}); break; }
+        case 'bet': case 'raise': case 'donk': {
+          const amt=act.amount||0, albl=act.action==='raise'?'raise':'bet';
+          steps.push({fn(){
+            lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt),albl);
+            let d=amt; if(street==='preflop'){if(p==='bb')d=amt-hd.blinds.bb;else if(p==='sb')d=amt-hd.blinds.sb;}
+            stacks[p]-=d; setStack(p,stacks[p]); pot+=d; setPot('POT: '+fmt(pot));
+            setAction((act.action==='raise'?'📢':'💰')+' '+name+' '+act.action+' '+fmt(amt));
+          }}); break; }
+        case 'allin': {
+          const amt=act.amount||stacks[p];
+          steps.push({fn(){
+            lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt)+' ALL-IN','allin');
+            stacks[p]=0; setStack(p,0); pot+=amt; setPot('POT: '+fmt(pot));
+            setAction('🔥 '+name+' ALL-IN '+fmt(amt)+'!');
+          }}); break; }
+      }
+    });
+  });
+
+  // SHOWDOWN
+  if (hd.showdown && hd.winner) {
+    const winnerPos=hd.winner;
+    const allFoldsSD=new Set(); hd.actions.filter(a=>a.action==='fold').forEach(a=>allFoldsSD.add(a.player));
+    const villainPos = winnerPos!==heroPosition ? winnerPos : ALL_POSITIONS.find(p=>p!==heroPosition&&!allFoldsSD.has(p))||activePlayers.find(p=>p!==heroPosition);
+    steps.push({fn(){
+      lightSeat(null); setAction('💫 Fichas al pozo...');
+      collectToPot(pot,'POT: '+fmt(pot),()=>{
+        setPot('POT: '+fmt(pot));
+        if(hd.villainCards&&villainPos){
+          setTimeout(()=>{
+            revealCards(villainPos,()=>{
+              const vc=hd.villainCards;
+              setAction('🃏 '+villainPos.toUpperCase()+' muestra '+vc[0].rank+vc[0].suitSymbol+vc[1].rank+vc[1].suitSymbol+' — '+winnerPos.toUpperCase()+' gana 🏆');
+              setTimeout(()=>collectToWinner(winnerPos,pot,()=>{ setAction('💰 '+winnerPos.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),1000);
+            });
+          },600);
+        } else {
+          setTimeout(()=>collectToWinner(winnerPos,pot,()=>{ setAction('💰 '+winnerPos.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600);
+        }
+      });
+    }});
+  } else if (hd.winner) {
+    steps.push({fn(){
+      lightSeat(null);
+      setTimeout(()=>collectToPot(pot,'POT: '+fmt(pot),()=>{ setPot('POT: '+fmt(pot)); setTimeout(()=>collectToWinner(hd.winner,pot,()=>{ setAction('💰 '+hd.winner.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600); }),400);
+    }});
+  }
+}
+
+// ══ ENGINE FUNCTIONS ══
+const DENOMS=[{val:500,cls:'c500'},{val:100,cls:'c100'},{val:25,cls:'c25'},{val:10,cls:'c10'},{val:5,cls:'c5'},{val:1,cls:'c1'}];
+function buildChips(amount){ const vis=amount>=10000?Math.round(amount/1000):amount; const o=[];let r=vis; for(const d of DENOMS){const n=Math.floor(r/d.val);for(let i=0;i<Math.min(n,4);i++)o.push(d.cls);r-=n*d.val;if(r<=0)break;} if(o.length===0)o.push('c1'); return o; }
+
+function showChips(seat,amount,label,action){
+  const zone=$('chips-'+seat); if(!zone)return;
+  const stack=$('chipstack-'+seat), amt=$('chipamt-'+seat);
+  stack.innerHTML=''; buildChips(amount).forEach(cls=>{const c=document.createElement('div');c.className='chip '+cls;stack.appendChild(c);});
+  amt.innerHTML='';
+  if(action){const l=document.createElement('div');l.className='chip-action '+action.toLowerCase();l.textContent=action.toUpperCase();amt.appendChild(l);}
+  const v=document.createElement('div');v.className='chip-value';v.textContent=label||fmt(amount);amt.appendChild(v);
+  zone.classList.add('show');
+}
+function hideChips(seat){const z=$('chips-'+seat);if(z){z.classList.remove('show');const s=$('chipstack-'+seat);if(s)s.innerHTML='';const a=$('chipamt-'+seat);if(a)a.innerHTML='';}}
+function hideAllChips(){ALL_POSITIONS.forEach(s=>hideChips(s));}
+function setStack(pos,amount){stacks[pos]=amount;const el=$('stk-'+pos);if(el)el.textContent=fmt(amount);}
+function setStreet(name){const sl=$('streetLabel');sl.classList.remove('show');setTimeout(()=>{sl.textContent=name;sl.classList.add('show');},200); const sp=$('streetPill');sp.classList.remove('show');setTimeout(()=>{sp.textContent=name;sp.classList.add('show');},200);}
+function setPot(txt,show=true){$('potDisplay').textContent=txt;$('potDisplay').classList.toggle('show',show);}
+function setAction(txt){const ab=$('actionBubble');ab.classList.remove('show');setTimeout(()=>{ab.textContent=txt;ab.classList.add('show');},120);}
+function lightSeat(id){ALL_POSITIONS.forEach(s=>{const el=$('lbl-'+s);if(el)el.classList.remove('lit');});if(id)$(id).classList.add('lit');}
+function showBoardCard(id,delay){setTimeout(()=>{const el=$(id);if(el)el.classList.add('show');},delay);}
+function updateProgress(i,total){$('progressFill').style.width=((i+1)/total*100)+'%';}
+function showCheck(pos){const el=$('check-'+pos);if(el)el.classList.add('show');}
+function hideCheck(pos){const el=$('check-'+pos);if(el)el.classList.remove('show');}
+function hideAllChecks(){ALL_POSITIONS.forEach(p=>hideCheck(p));}
+function foldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.add('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el)el.classList.add('folded');});}
+function unfoldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.remove('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el)el.classList.remove('folded');});}
+function unfadeAll(){for(let i=0;i<5;i++)$('seat-'+i).classList.remove('faded');ALL_POSITIONS.forEach(p=>unfoldSeat(p));}
+
+function revealCards(seat,cb){
+  [seat+'-0',seat+'-1'].forEach((slotId,i)=>{
+    setTimeout(()=>{
+      const slot=$(slotId),def=cardDefs[slotId];if(!def||!slot){if(i===1&&cb)cb();return;}
+      slot.style.transition='transform 0.12s ease-in';slot.style.transform='rotateY(90deg)';
+      setTimeout(()=>{slot.classList.remove('face-down');slot.classList.add(def.color,'revealed');slot.innerHTML=`<span class="rank">${def.rank}</span><span class="suit">${def.suit}</span>`;slot.style.transition='transform 0.12s ease-out';slot.style.transform='rotateY(0deg)';if(i===1&&cb)setTimeout(cb,300);},150);
+    },i*250);
+  });
+}
+
+const chipColorMap={c500:'linear-gradient(180deg,#aa33cc,#661a88)',c100:'linear-gradient(180deg,#222,#000)',c25:'linear-gradient(180deg,#33aa55,#1a6633)',c10:'linear-gradient(180deg,#3366dd,#1a3a99)',c5:'linear-gradient(180deg,#e83010,#aa1800)',c1:'linear-gradient(180deg,#f0f0f0,#c8c8c8)'};
+
+function collectToPot(potAmount,label,cb){
+  const potZone=$('potChipZone'),potRect=potZone.getBoundingClientRect();
+  const targetX=potRect.left+potRect.width/2-12,targetY=potRect.top+potRect.height/2-5;
+  let totalFlying=0,landed=0;
+  ALL_POSITIONS.forEach((seat,si)=>{
+    const stack=$('chipstack-'+seat);if(!stack)return;
+    const chips=stack.querySelectorAll('.chip');if(!chips.length)return;
+    chips.forEach((chip,ci)=>{
+      const cls=Array.from(chip.classList).find(c=>c!=='chip')||'c25';
+      const rect=chip.getBoundingClientRect();
+      const fly=document.createElement('div');fly.className='flying-chip';fly.style.background=chipColorMap[cls]||'#888';fly.style.left=rect.left+'px';fly.style.top=rect.top+'px';fly.style.opacity='1';
+      document.body.appendChild(fly);totalFlying++;
+      setTimeout(()=>{fly.style.left=targetX+'px';fly.style.top=targetY+'px';fly.style.opacity='0';fly.addEventListener('transitionend',function h(e){if(e.propertyName!=='left')return;fly.removeEventListener('transitionend',h);fly.remove();landed++;if(landed===totalFlying){showPotChips(potAmount,label);if(cb)setTimeout(cb,300);}});},ci*35+si*25);
+    });
+  });
+  hideAllChips();
+  if(totalFlying===0){showPotChips(potAmount,label);if(cb)setTimeout(cb,300);}
+}
+function showPotChips(amount,label){const zone=$('potChipZone'),stack=$('potChipStack'),lbl=$('potChipLabel');stack.innerHTML='';buildChips(amount).forEach(cls=>{const c=document.createElement('div');c.className='chip '+cls;stack.appendChild(c);});lbl.textContent=label||('POT: '+fmt(amount));zone.classList.add('show');}
+function hidePotChips(){$('potChipZone').classList.remove('show');$('potChipStack').innerHTML='';$('potChipLabel').textContent='';}
+
+function collectToWinner(winnerSeat,potAmount,cb){
+  const potStack=$('potChipStack');
+  const chips=potStack.querySelectorAll('.chip');if(!chips.length){if(cb)cb();return;}
+  const winnerLbl=$('lbl-'+winnerSeat);if(!winnerLbl){if(cb)cb();return;}
+  const targetRect=winnerLbl.getBoundingClientRect();
+  const targetX=targetRect.left+targetRect.width/2-12,targetY=targetRect.top+targetRect.height/2-5;
+  let totalFlying=0,landed=0;
+  chips.forEach((chip,ci)=>{
+    const cls=Array.from(chip.classList).find(c=>c!=='chip')||'c25';
+    const rect=chip.getBoundingClientRect();
+    const fly=document.createElement('div');fly.className='flying-chip';fly.style.background=chipColorMap[cls]||'#888';fly.style.left=rect.left+'px';fly.style.top=rect.top+'px';fly.style.opacity='1';
+    document.body.appendChild(fly);totalFlying++;
+    setTimeout(()=>{fly.style.left=targetX+'px';fly.style.top=targetY+'px';fly.style.opacity='0';fly.addEventListener('transitionend',function h(e){if(e.propertyName!=='left')return;fly.removeEventListener('transitionend',h);fly.remove();landed++;if(landed===totalFlying){hidePotChips();$('potDisplay').classList.remove('show');setStack(winnerSeat,stacks[winnerSeat]+potAmount);if(cb)setTimeout(cb,300);}});},ci*35);
+  });
+}
+
+function showAnte(amount,label){const zone=$('anteZone'),stack=$('anteChipStack'),lbl=$('anteLabel');stack.innerHTML='';buildChips(amount).forEach(cls=>{const c=document.createElement('div');c.className='chip '+cls;stack.appendChild(c);});lbl.textContent=label;zone.classList.add('show');}
+function hideAnte(){$('anteZone').classList.remove('show');$('anteChipStack').innerHTML='';$('anteLabel').textContent='';}
+function flyAnteToCenter(cb){
+  const bbZone=$('chips-bb'),bbRect=bbZone?bbZone.getBoundingClientRect():null;
+  const anteZone=$('anteZone'),anteRect=anteZone.getBoundingClientRect();
+  const targetX=anteRect.left+anteRect.width/2-12,targetY=anteRect.top+anteRect.height/2-5;
+  const anteChips=buildChips(handData.ante);let totalFlying=anteChips.length,landed=0;
+  if(totalFlying===0){showAnte(handData.ante,'ANTE '+fmt(handData.ante));if(cb)cb();return;}
+  const startX=bbRect?bbRect.left+bbRect.width/2-12:targetX,startY=bbRect?bbRect.top:targetY;
+  anteChips.forEach((cls,ci)=>{
+    const fly=document.createElement('div');fly.className='flying-chip';fly.style.background=chipColorMap[cls]||'#888';fly.style.left=startX+'px';fly.style.top=(startY-ci*3)+'px';fly.style.opacity='1';
+    document.body.appendChild(fly);
+    setTimeout(()=>{fly.style.left=targetX+'px';fly.style.top=targetY+'px';fly.style.opacity='0';fly.addEventListener('transitionend',function h(e){if(e.propertyName!=='left')return;fly.removeEventListener('transitionend',h);fly.remove();landed++;if(landed===totalFlying){showAnte(handData.ante,'ANTE '+fmt(handData.ante));if(cb)setTimeout(cb,200);}});},ci*40);
+  });
+}
+
+// DEALER BUTTON
+function positionDealerBtn(){
+  const btnPos=seatMap.indexOf('btn');
+  const btnSeat=$('seat-'+btnPos);if(!btnSeat||btnPos>=5)return;
+  const tableRect=$('table').getBoundingClientRect();
+  const db=$('dealerBtn');
+  if(btnPos===0){
+    const lblEl=$('lbl-btn');
+    if(lblEl){const lblRect=lblEl.getBoundingClientRect();db.style.left=(lblRect.right+5-tableRect.left)+'px';db.style.top=(lblRect.top+lblRect.height/2-12-tableRect.top)+'px';}
+  } else {
+    const seatRect=btnSeat.getBoundingClientRect();
+    const cx=tableRect.left+tableRect.width/2,cy=tableRect.top+tableRect.height/2;
+    const sx=seatRect.left+seatRect.width/2,sy=seatRect.top+seatRect.height/2;
+    const dx=cx-sx,dy=cy-sy,dist=Math.sqrt(dx*dx+dy*dy);
+    const nx=dx/dist,ny=dy/dist;
+    db.style.left=(sx+nx*90-12-tableRect.left)+'px';
+    db.style.top=(sy+ny*10+20-12-tableRect.top)+'px';
+  }
+  db.classList.add('show');
+}
+function hideDealerBtn(){$('dealerBtn').classList.remove('show');}
+
+// DEALING
+function getPos(el){const r=el.getBoundingClientRect();return{x:r.left,y:r.top};}
+function getTableCenter(){const r=$('table').getBoundingClientRect();return{x:r.left+r.width/2-15,y:r.top+r.height/2-22};}
+
+function animateDeal(slotId,cb){
+  const slot=$(slotId),dp=getTableCenter(),sp=getPos(slot);
+  const fly=document.createElement('div');fly.className='flying-card';
+  fly.style.cssText=`left:${dp.x}px;top:${dp.y}px;width:30px;height:44px;position:fixed;transition:left 0.26s cubic-bezier(0.25,0.8,0.4,1),top 0.26s cubic-bezier(0.25,0.8,0.4,1),transform 0.26s;`;
+  fly.style.transform=`rotate(${(Math.random()-0.5)*14}deg)`;
+  document.body.appendChild(fly);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{fly.style.left=sp.x+'px';fly.style.top=sp.y+'px';fly.style.transform='rotate(0deg)';}));
+  fly.addEventListener('transitionend',function h(e){if(e.propertyName!=='left')return;fly.removeEventListener('transitionend',h);fly.remove();slot.style.opacity='1';if(cb)cb();});
+}
+
+const sbIdx=ALL_POSITIONS.indexOf('sb');
+function getDealOrder(){const ds=[];for(let i=0;i<8;i++)ds.push(ALL_POSITIONS[(sbIdx+i)%8]);const order=[];ds.forEach(s=>order.push(s+'-0'));ds.forEach(s=>order.push(s+'-1'));return order;}
+
+function dealNext(){
+  const dealOrder=getDealOrder();
+  if(dealIndex>=dealOrder.length){
+    lightSeat(null);
+    setTimeout(()=>flipHero(()=>{
+      const hc=handData.heroCards;
+      setAction('🎯 Hero: '+hc[0].rank+hc[0].suitSymbol+' '+hc[1].rank+hc[1].suitSymbol);
+      phase='replay';stepIndex=0;applyStep(0);startAuto();
+    }),400);
+    return;
+  }
+  const slotId=dealOrder[dealIndex];
+  const seat=slotId.split('-')[0];
+  const seatSlot=seatMap.indexOf(seat);
+  if(seatSlot>=5){dealIndex++;dealNext();return;} // skip hidden seats
+  lightSeat('lbl-'+seat);
+  setAction('🃏 Ronda '+(dealIndex<8?1:2)+' → '+seat.toUpperCase());
+  animateDeal(slotId,()=>{dealIndex++;setTimeout(dealNext,140);});
+}
+
+function flipHero(cb){
+  [heroPosition+'-0',heroPosition+'-1'].forEach((slotId,i)=>{
+    setTimeout(()=>{
+      const slot=$(slotId),def=cardDefs[slotId];if(!def)return;
+      slot.style.transition='transform 0.11s ease-in';slot.style.transform='rotateY(90deg)';
+      setTimeout(()=>{slot.classList.remove('face-down');slot.classList.add(def.color);slot.innerHTML=`<span class="rank">${def.rank}</span><span class="suit">${def.suit}</span>`;slot.style.transition='transform 0.11s ease-out';slot.style.transform='rotateY(0deg)';if(i===1&&cb)setTimeout(cb,200);},110);
+    },i*220);
+  });
+}
+
+function setPlayIcon(p){const i=$('iconPlay');if(p)i.innerHTML='<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';else i.innerHTML='<path d="M8 5v14l11-7z"/>';}
+function applyStep(i){if(steps[i]){steps[i].fn();updateProgress(i,steps.length);}}
+function startAuto(){playing=true;setPlayIcon(true);autoTimer=setInterval(()=>{if(stepIndex<steps.length-1){stepIndex++;applyStep(stepIndex);}else stopAuto();},STEP_DELAY);}
+function stopAuto(){playing=false;clearInterval(autoTimer);setPlayIcon(false);}
+
+function postBlindsAndDeal(){
+  positionDealerBtn();
+  const sb=handData.blinds.sb,bb=handData.blinds.bb,ante=handData.ante||0;
+  lightSeat('lbl-sb');
+  showChips('sb',sb,fmt(sb),'blind');setStack('sb',handData.effectiveStack-sb);
+  setAction('🪙 SB pone ciega '+fmt(sb));
+  setTimeout(()=>{
+    lightSeat('lbl-bb');
+    showChips('bb',bb,fmt(bb),'blind');setStack('bb',handData.effectiveStack-bb);
+    setAction('🪙 BB pone ciega '+fmt(bb));
+    stacks['sb']=handData.effectiveStack-sb;stacks['bb']=handData.effectiveStack-bb;
+    if(ante>0){
+      setTimeout(()=>{
+        stacks['bb']-=ante;setStack('bb',stacks['bb']);
+        setAction('🪙 BB pone ante '+fmt(ante));
+        flyAnteToCenter(()=>{
+          const initPot=sb+bb+ante;setPot('POT: '+fmt(initPot));setPot('POT: '+fmt(initPot),true);
+          lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
+        });
+      },1000);
+    } else {
+      setTimeout(()=>{
+        const initPot=sb+bb;setPot('POT: '+fmt(initPot));setPot('POT: '+fmt(initPot),true);
+        lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
+      },1000);
+    }
+  },1000);
+}
+
+function hardReset(){
+  stopAuto();phase='idle';dealIndex=0;stepIndex=0;
+  document.querySelectorAll('.board-card').forEach(el=>el.classList.remove('show'));
+  unfadeAll();
+  ALL_POSITIONS.forEach(s=>{
+    const lbl=$('lbl-'+s);if(lbl)lbl.classList.remove('lit','folded');
+    [s+'-0',s+'-1'].forEach(cid=>{const el=$(cid);if(el){el.style.opacity='0';el.style.transform='';el.style.transition='';el.className='placed-card face-down';el.innerHTML='';}});
+  });
+  ALL_POSITIONS.forEach(p=>{const sv=(handData.playerStacks&&handData.playerStacks[p])||handData.effectiveStack;stacks[p]=sv;setStack(p,sv);});
+  hideAllChips();hidePotChips();hideAllChecks();hideDealerBtn();hideAnte();
+  $('potDisplay').classList.remove('show');
+  $('actionBubble').classList.remove('show');
+  $('streetLabel').classList.remove('show');
+  $('streetPill').classList.remove('show');
+  $('questionBox').classList.remove('show');
+  $('progressFill').style.width='0%';
+  document.querySelectorAll('.flying-card,.flying-chip').forEach(e=>e.remove());
+  buildSteps(handData);
+  setTimeout(postBlindsAndDeal,400);
+}
+
+$('btnPlayPause').addEventListener('click',()=>{if(phase==='replay'){if(playing)stopAuto();else{if(stepIndex<steps.length-1){stepIndex++;applyStep(stepIndex);}startAuto();}}});
+$('btnNext').addEventListener('click',()=>{if(phase==='replay'){stopAuto();if(stepIndex<steps.length-1){stepIndex++;applyStep(stepIndex);}}});
+$('btnPrev').addEventListener('click',()=>{
+  if(phase!=='replay')return;stopAuto();
+  if(stepIndex>0){
+    stepIndex--;
+    document.querySelectorAll('.board-card').forEach(el=>el.classList.remove('show'));
+    unfadeAll();
+    ALL_POSITIONS.forEach(s=>{const lbl=$('lbl-'+s);if(lbl)lbl.classList.remove('lit','folded');[s+'-0',s+'-1'].forEach(cid=>{const el=$(cid);if(el)el.classList.remove('folded','revealed');});});
+    ALL_POSITIONS.forEach(p=>{const sv=(handData.playerStacks&&handData.playerStacks[p])||handData.effectiveStack;stacks[p]=sv;setStack(p,sv);});
+    hideAllChips();hidePotChips();hideAllChecks();hideAnte();
+    $('potDisplay').classList.remove('show');$('questionBox').classList.remove('show');
+    buildSteps(handData);for(let i=0;i<=stepIndex;i++)steps[i].fn();
+    updateProgress(stepIndex,steps.length);
+  }
+});
+$('btnStop').addEventListener('click',hardReset);
+
+</script>
+</body>
+</html>
