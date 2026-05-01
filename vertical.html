@@ -175,9 +175,9 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
 
 /* oval table */
 .table {
-  width:374px; height:440px;
+  width:320px; height:450px;
   background:radial-gradient(ellipse at 50% 38%, #1e6040 0%, #124530 40%, #0a2e1a 75%, #061508 100%);
-  border-radius:50%; border:13px solid var(--wood);
+  border-radius:50%; border:11px solid var(--wood);
   box-shadow:0 0 0 3px var(--wood2),0 0 0 5px #150800,0 16px 50px rgba(0,0,0,0.85),inset 0 0 50px rgba(0,0,0,0.4);
   position:relative; overflow:visible;
 }
@@ -283,35 +283,38 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
 }
 .player.faded { opacity:0.15; pointer-events:none; }
 
-/* 5 positions — Hero always bottom center */
-.slot0 { bottom:-2%;  left:50%;  transform:translateX(-50%); }  /* Hero */
-.slot1 { top:50%;     left:-22%; transform:translateY(-50%); }  /* BTN/left */
-.slot2 { top:-14%;    left:5%;   }                               /* top-left */
-.slot3 { top:-14%;    right:5%;  }                               /* top-right */
-.slot4 { top:50%;     right:-22%;transform:translateY(-50%); }  /* CO/right */
+/* 8 positions — Hero always bottom center, distributed counter-clockwise */
+.slot0 { bottom:-3%;  left:50%;  transform:translateX(-50%); }       /* Hero — bottom */
+.slot1 { bottom:14%;  left:-11%; }                                    /* bottom-left */
+.slot2 { top:50%;     left:-17%; transform:translateY(-50%); }        /* middle-left */
+.slot3 { top:9%;      left:-9%;  }                                    /* top-left */
+.slot4 { top:-9%;     left:50%;  transform:translateX(-50%); }        /* top-center */
+.slot5 { top:9%;      right:-9%; }                                    /* top-right */
+.slot6 { top:50%;     right:-17%;transform:translateY(-50%); }        /* middle-right */
+.slot7 { bottom:14%;  right:-11%;}                                    /* bottom-right */
 
 /* seat label */
 .seat-label {
   background:rgba(0,0,0,0.88); border:1.5px solid #333;
-  border-radius:9px; padding:5px 10px; text-align:center;
+  border-radius:8px; padding:3px 6px; text-align:center;
   white-space:nowrap; transition:border-color 0.25s,box-shadow 0.25s,opacity 0.4s;
-  min-width:66px; position:relative;
+  min-width:54px; position:relative;
 }
 .seat-label .pos {
-  display:block; font-size:0.65rem; color:var(--gold); font-weight:700;
-  letter-spacing:0.15em; margin-bottom:2px; font-family:'Cinzel',serif;
+  display:block; font-size:0.55rem; color:var(--gold); font-weight:700;
+  letter-spacing:0.12em; margin-bottom:1px; font-family:'Cinzel',serif;
   text-shadow:0 0 8px rgba(201,168,76,0.35);
 }
-.name-row { display:flex; align-items:center; gap:5px; justify-content:center; }
-.seat-label .name { font-size:0.78rem; color:#fff; font-weight:700; letter-spacing:0.04em; }
+.name-row { display:flex; align-items:center; gap:4px; justify-content:center; }
+.seat-label .name { font-size:0.66rem; color:#fff; font-weight:700; letter-spacing:0.03em; }
 .stack {
-  font-size:0.62rem; color:var(--green); font-weight:700;
-  background:rgba(0,80,0,0.25); border:1px solid #2a5a2a; border-radius:4px; padding:0 5px;
+  font-size:0.54rem; color:var(--green); font-weight:700;
+  background:rgba(0,80,0,0.25); border:1px solid #2a5a2a; border-radius:3px; padding:0 4px;
 }
-.seat-label.hero { border-color:var(--gold); border-width:2px; background:rgba(0,0,0,0.92); box-shadow:0 0 16px rgba(201,168,76,0.25); }
-.seat-label.hero .pos  { font-size:0.7rem; color:#e8c84a; }
+.seat-label.hero { border-color:var(--gold); border-width:2px; background:rgba(0,0,0,0.92); box-shadow:0 0 16px rgba(201,168,76,0.25); padding:5px 10px; min-width:70px; }
+.seat-label.hero .pos  { font-size:0.7rem; color:#e8c84a; letter-spacing:0.15em; }
 .seat-label.hero .name { font-size:0.85rem; }
-.seat-label.hero .stack { color:#90dd90; border-color:#3a7a3a; }
+.seat-label.hero .stack { color:#90dd90; border-color:#3a7a3a; font-size:0.62rem; padding:0 5px; }
 .seat-label.lit    { border-color:#fff !important; box-shadow:0 0 12px rgba(255,255,255,0.35) !important; }
 .seat-label.folded { opacity:0.25; }
 
@@ -324,13 +327,13 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
 }
 
 .player-row { display:flex; align-items:center; gap:5px; }
-.hole-cards { display:flex; gap:3px; min-height:44px; align-items:center; position:relative; }
+.hole-cards { display:flex; gap:3px; min-height:36px; align-items:center; position:relative; }
 
-/* hole card */
+/* hole card (villains — compact) */
 .placed-card {
-  width:30px; height:44px; border-radius:5px; border:1px solid #bbb;
+  width:24px; height:34px; border-radius:4px; border:1px solid #bbb;
   background:#f5f0e8; display:flex; flex-direction:column;
-  align-items:flex-start; justify-content:flex-start; padding:2px 3px;
+  align-items:flex-start; justify-content:flex-start; padding:1px 2px;
   font-family:'Roboto Condensed',sans-serif; font-weight:800;
   box-shadow:0 2px 8px rgba(0,0,0,0.6);
   opacity:0; transition:opacity 0.01s,transform 0.15s;
@@ -339,8 +342,14 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
 .placed-card.folded { opacity:0.15 !important; }
 .placed-card.red   { color:var(--red); }
 .placed-card.black { color:#111; }
-.placed-card .rank { font-size:0.8rem; line-height:1; }
-.placed-card .suit { font-size:0.68rem; line-height:1; }
+.placed-card .rank { font-size:0.65rem; line-height:1; }
+.placed-card .suit { font-size:0.55rem; line-height:1; }
+
+/* Hero cards — bigger */
+.player.slot0 .hole-cards { gap:4px; min-height:46px; }
+.player.slot0 .placed-card { width:32px; height:46px; border-radius:5px; padding:2px 3px; }
+.player.slot0 .placed-card .rank { font-size:0.85rem; }
+.player.slot0 .placed-card .suit { font-size:0.72rem; }
 @keyframes revealGlow {
   0%   { box-shadow:0 2px 8px rgba(0,0,0,0.6); }
   50%  { box-shadow:0 0 16px rgba(201,168,76,0.6),0 0 30px rgba(201,168,76,0.3); }
@@ -400,28 +409,30 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
 }
 .chip-float.show { opacity: 1; }
 
-/* Each seat's chip zone inside table */
-/* slot0 = Hero (bottom center) */
-.chip-pos-0 { bottom: 22%; left: 50%; transform: translateX(-50%); }
-/* slot1 = BTN (left) */
-.chip-pos-1 { top: 48%; left: 7%; transform: translateY(-50%); }
-/* slot2 = top-left */
-.chip-pos-2 { top: 10%; left: 22%; }
-/* slot3 = top-right (SB) */
-.chip-pos-3 { top: 10%; right: 22%; }
-/* slot4 = CO (right) */
-.chip-pos-4 { top: 48%; right: 7%; transform: translateY(-50%); }
+/* Each seat's chip zone inside table — 8-max */
+.chip-pos-0 { bottom: 23%; left: 50%; transform: translateX(-50%); }       /* Hero — bottom */
+.chip-pos-1 { bottom: 28%; left: 18%; }                                     /* bottom-left */
+.chip-pos-2 { top: 50%;    left: 12%; transform: translateY(-50%); }        /* middle-left */
+.chip-pos-3 { top: 24%;    left: 20%; }                                     /* top-left */
+.chip-pos-4 { top: 17%;    left: 50%; transform: translateX(-50%); }        /* top-center */
+.chip-pos-5 { top: 24%;    right: 20%; }                                    /* top-right */
+.chip-pos-6 { top: 50%;    right: 12%; transform: translateY(-50%); }       /* middle-right */
+.chip-pos-7 { bottom: 28%; right: 18%; }                                    /* bottom-right */
 
-/* action bubble — bottom left of table */
-.action-wrap { position:absolute; bottom:5%; left:3%; width:auto; }
+/* action bubble — outside the table, above controls */
+.action-wrap {
+  display:flex; justify-content:center; align-items:center;
+  min-height:26px; padding:0 8px;
+}
 .action-bubble {
   display:inline-block; background:rgba(0,0,0,0.85);
-  border:1px solid rgba(201,168,76,0.35); border-radius:8px;
-  padding:3px 10px; font-size:0.6rem; color:#f0e8d0;
-  letter-spacing:0.04em; opacity:0; transform:translateX(-5px);
-  transition:opacity 0.3s,transform 0.3s; white-space:nowrap; max-width:220px;
+  border:1px solid rgba(201,168,76,0.35); border-radius:14px;
+  padding:5px 14px; font-size:0.68rem; color:#f0e8d0;
+  letter-spacing:0.04em; opacity:0; transform:translateY(4px);
+  transition:opacity 0.3s,transform 0.3s;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px;
 }
-.action-bubble.show { opacity:1; transform:translateX(0); }
+.action-bubble.show { opacity:1; transform:translateY(0); }
 
 /* bottom panel */
 .bottom {
@@ -568,21 +579,20 @@ html, body { width:100%; height:100%; background:var(--bg); font-family:'Roboto 
           <div class="chip-stack" id="anteChipStack"></div>
           <div class="ante-label" id="anteLabel"></div>
         </div>
-        <!-- 5 seats: slot0=Hero(bottom), slot1=left, slot2=top-left, slot3=top-right, slot4=right -->
+        <!-- 8 seats: slot0=Hero(bottom), distributed counter-clockwise -->
         <div class="player" id="seat-0"></div>
         <div class="player" id="seat-1"></div>
         <div class="player" id="seat-2"></div>
         <div class="player" id="seat-3"></div>
         <div class="player" id="seat-4"></div>
-        <!-- extra seats hidden for 5-max -->
-        <div class="player" id="seat-5" style="display:none"></div>
-        <div class="player" id="seat-6" style="display:none"></div>
-        <div class="player" id="seat-7" style="display:none"></div>
-        <div class="action-wrap"><div class="action-bubble" id="actionBubble"></div></div>
+        <div class="player" id="seat-5"></div>
+        <div class="player" id="seat-6"></div>
+        <div class="player" id="seat-7"></div>
       </div>
     </div>
 
     <div class="bottom">
+      <div class="action-wrap"><div class="action-bubble" id="actionBubble"></div></div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
       <div class="controls">
         <button class="ctrl-btn restart-btn" id="btnStop" title="Repetir">
@@ -619,8 +629,8 @@ const $ = id => document.getElementById(id);
 // ═══ CONFIG ═══
 const API_URL = 'https://pokerreplayer.pokertopprous25.workers.dev/';
 const ALL_POSITIONS = ['utg','utg1','lj','hj','co','btn','sb','bb'];
-// 5-max slot classes — vertical layout
-const SLOT_CLASSES = ['slot0','slot1','slot2','slot3','slot4','slot4','slot4','slot4'];
+// 8-max slot classes — vertical layout, Hero always slot0 (bottom)
+const SLOT_CLASSES = ['slot0','slot1','slot2','slot3','slot4','slot5','slot6','slot7'];
 
 // ══════════════════════════════════════════
 // IMAGE HANDLING
@@ -794,7 +804,7 @@ CRITICAL POT NOTATION:
 - Format: "action amount POT_RESULT" e.g. "yo pago 800" means Hero calls and pot becomes 800
 - Example: "Or CO 40 yo en D 120 SB raise 375 CO foldea y yo pago 800"
   - CO opens 40 (amount=40)
-  - Hero 3bets to 120 (amount=120)  
+  - Hero 3bets to 120 (amount=120)
   - SB 4bets to 375 (amount=375)
   - CO folds
   - "yo pago 800" = Hero CALLS, pot becomes 800. Call amount = last raise amount (375). Use 375 NOT 800.
@@ -832,7 +842,7 @@ OOP acts first post-flop.`;
 // ══════════════════════════════════════════
 // REPLAY ENGINE
 // ══════════════════════════════════════════
-let handData, seatMap, heroPosition, activePlayers, stacks, cardDefs, runtimeInvested = {}, runtimePot = 0;
+let handData, seatMap, heroPosition, activePlayers, stacks, cardDefs, runtimeInvested = {};
 let phase, dealIndex, stepIndex, playing, autoTimer, steps;
 const STEP_DELAY = 2400;
 function fmt(n){ return typeof n==='number' ? n.toLocaleString() : n; }
@@ -849,10 +859,10 @@ function initReplay(hd) {
   seatMap = [];
   for (let i=0; i<8; i++) seatMap.push(ALL_POSITIONS[(heroIdx+i)%8]);
 
-  // Show only 5 seats for 5-max display
+  // Show all 8 seats
   for (let i=0; i<8; i++) {
     const s = $('seat-'+i);
-    s.style.display = i < 5 ? '' : 'none';
+    s.style.display = '';
   }
 
   // Active players
@@ -881,12 +891,18 @@ function initReplay(hd) {
   function rndCard(){ let c; do{c=ranks[Math.floor(Math.random()*13)]+suits[Math.floor(Math.random()*4)];}while(usedSet.has(c)); usedSet.add(c); const s=c.slice(-1); return{rank:c.slice(0,-1),suit:s,color:(s==='♥'||s==='♦')?'red':'black'}; }
   ALL_POSITIONS.forEach(p=>{ if(!cardDefs[p+'-0']){cardDefs[p+'-0']=rndCard();cardDefs[p+'-1']=rndCard();} });
 
-  // Board
+  // Board — normalize: parser sometimes returns turn/river as an array of one card
+  if (hd.board) {
+    if (Array.isArray(hd.board.turn))  hd.board.turn  = hd.board.turn[0]  || null;
+    if (Array.isArray(hd.board.river)) hd.board.river = hd.board.river[0] || null;
+    // also tolerate flop coming as a single object instead of array
+    if (hd.board.flop && !Array.isArray(hd.board.flop)) hd.board.flop = [hd.board.flop];
+  }
   const boardArea = $('boardArea'); boardArea.innerHTML = '';
   const allBoard = [];
   if (hd.board.flop) allBoard.push(...hd.board.flop);
-  if (hd.board.turn) allBoard.push(hd.board.turn);
-  if (hd.board.river) allBoard.push(hd.board.river);
+  if (hd.board.turn && hd.board.turn.rank) allBoard.push(hd.board.turn);
+  if (hd.board.river && hd.board.river.rank) allBoard.push(hd.board.river);
   allBoard.forEach((card,i)=>{
     const div=document.createElement('div'); div.className='board-card '+card.color; div.id='bc'+(i+1);
     div.innerHTML=`<span class="rank">${card.rank}</span><span class="suit">${card.suitSymbol}</span>`;
@@ -902,21 +918,9 @@ function initReplay(hd) {
   const playersWithActions = new Set(['sb','bb']);
   hd.actions.forEach(a=>playersWithActions.add(a.player));
 
-  // Only build visible seats (0-4 for 5-max)
-  // For hidden positions, create minimal invisible elements for chip/card references
+  // Build all 8 seats
   seatMap.forEach((pos,slotIdx)=>{
     const seatEl = $('seat-'+slotIdx);
-    if (slotIdx >= 5) {
-      // Hidden seat — create invisible chip/card refs so engine doesn't break
-      seatEl.innerHTML = `
-        <div class="chip-zone" id="chips-${pos}" style="display:none"><div class="chip-stack" id="chipstack-${pos}"></div><div class="chip-amount" id="chipamt-${pos}"></div></div>
-        <div class="placed-card face-down" id="${pos}-0" style="display:none"></div>
-        <div class="placed-card face-down" id="${pos}-1" style="display:none"></div>
-        <div class="seat-label" id="lbl-${pos}" style="display:none"></div>
-        <div class="check-label" id="check-${pos}" style="display:none"></div>
-        <span id="stk-${pos}" style="display:none"></span>`;
-      return;
-    }
     seatEl.className = 'player ' + SLOT_CLASSES[slotIdx];
     const isHero = pos===heroPosition;
     const isBottom = slotIdx===0;
@@ -954,7 +958,6 @@ function initReplay(hd) {
   ALL_POSITIONS.forEach(p => stacks[p] = (hd.playerStacks&&hd.playerStacks[p]) || hd.effectiveStack);
 
   runtimeInvested = {}; ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0);
-  runtimePot = hd.blinds.sb + hd.blinds.bb + (hd.ante||0);
   buildSteps(hd);
   phase='blinds'; dealIndex=0; stepIndex=0; playing=false;
   setTimeout(postBlindsAndDeal, 500);
@@ -963,23 +966,25 @@ function initReplay(hd) {
 // ══ STEP BUILDER ══
 function buildSteps(hd) {
   steps = [];
+  let pot = hd.blinds.sb + hd.blinds.bb + (hd.ante || 0);
+  const invested = {};
+  ALL_POSITIONS.forEach(p => invested[p] = 0);
+  invested['sb'] = hd.blinds.sb;
+  invested['bb'] = hd.blinds.bb;
+
   const streets = ['preflop','flop','turn','river'];
-  // Track per-street investment to calculate correct pot additions
-  // Also track current bet level to auto-correct over-reported call amounts
-  const currentBet = {};
-  let streetMaxBet = 0;
 
   streets.forEach(street => {
-    const streetActions = hd.actions.filter(a=>a.street===street);
-    if (streetActions.length===0) return;
+    const streetActions = hd.actions.filter(a => a.street === street);
+    if (streetActions.length === 0) return;
 
-    if (street==='preflop') {
-      steps.push({fn(){setStreet('PREFLOP');}});
-      const preflopActs = hd.actions.filter(a=>a.street==='preflop');
+    if (street === 'preflop') {
+      steps.push({fn() { setStreet('PREFLOP'); }});
+      // Bulk fold: all consecutive folds at start go in one step
       const bulkFolders = [];
-      for (const act of preflopActs) { if(act.action==='fold') bulkFolders.push(act.player); else break; }
+      for (const act of streetActions) { if (act.action === 'fold') bulkFolders.push(act.player); else break; }
       if (bulkFolders.length > 0) {
-        steps.push({fn(){
+        steps.push({fn() {
           lightSeat(null);
           bulkFolders.forEach(p => foldSeat(p));
           setAction('❌ ' + bulkFolders.map(p=>p.toUpperCase()).join(' · ') + ' fold');
@@ -987,106 +992,202 @@ function buildSteps(hd) {
       }
     }
 
-    if (street==='flop') {
-      // Collect preflop bets — added at end of preflop processing above
-      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('FLOP'); setPot('POT: '+fmt(runtimePot)); showPotChips(runtimePot,'POT: '+fmt(runtimePot));
-        seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)){ $('seat-'+si).classList.add('faded'); foldSeat(pos); } });
-        showBoardCard('bc1',0); showBoardCard('bc2',140); showBoardCard('bc3',280);
-        setAction('🂠 Flop: '+hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  ')); }});
-    }
-    if (street==='turn') {
-      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('TURN'); setPot('POT: '+fmt(runtimePot)); showBoardCard('bc4',0); setAction('🂠 Turn: '+hd.board.turn.rank+hd.board.turn.suitSymbol); }});
-    }
-    if (street==='river') {
-      const turnBets = hd.actions.filter(a=>a.street==='turn'&&['bet','raise','call','allin'].includes(a.action));
-      if (turnBets.length>0) steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: '+fmt(runtimePot)); showBoardCard('bc5',0); setAction('🂠 River: '+hd.board.river.rank+hd.board.river.suitSymbol); }});
+    ALL_POSITIONS.forEach(p => invested[p] = 0); // reset per street
+    if (street === 'flop') {
+      const potAtFlop = pot;
+      steps.push({fn() {
+        lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte();
+        collectToPot(potAtFlop, 'POT: ' + fmt(potAtFlop), () => { showPotChips(potAtFlop, 'POT: ' + fmt(potAtFlop)); setPot('POT: ' + fmt(potAtFlop)); });
+      }});
+      steps.push({fn() {
+        lightSeat(null); hideAllChips(); setStreet('FLOP'); setPot('POT: ' + fmt(potAtFlop)); showPotChips(potAtFlop, 'POT: ' + fmt(potAtFlop));
+        seatMap.forEach((pos, si) => { if (si<8 && !activePlayers.includes(pos)) { $('seat-'+si).classList.add('faded'); foldSeat(pos); } });
+        showBoardCard('bc1', 0); showBoardCard('bc2', 140); showBoardCard('bc3', 280);
+        setAction('🂠 Flop: ' + hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  '));
+      }});
     }
 
-    // Track if this street had real bets for collect logic
-    const streetBets = streetActions.filter(a=>['bet','raise','call','allin','limp'].includes(a.action));
+    ALL_POSITIONS.forEach(p => invested[p] = 0);
+    if (street === 'turn') {
+      const potAtTurn = pot;
+      steps.push({fn() {
+        lightSeat(null); setAction('💫 Fichas al pozo...');
+        collectToPot(potAtTurn, 'POT: ' + fmt(potAtTurn), () => { showPotChips(potAtTurn, 'POT: ' + fmt(potAtTurn)); setPot('POT: ' + fmt(potAtTurn)); });
+      }});
+      steps.push({fn() {
+        lightSeat(null); hideAllChips(); setStreet('TURN'); setPot('POT: ' + fmt(potAtTurn)); showPotChips(potAtTurn, 'POT: ' + fmt(potAtTurn));
+        showBoardCard('bc4', 0);
+        setAction('🂠 Turn: ' + hd.board.turn.rank + hd.board.turn.suitSymbol);
+      }});
+    }
+
+    ALL_POSITIONS.forEach(p => invested[p] = 0);
+    if (street === 'river') {
+      const potAtRiver = pot;
+      const turnBets = hd.actions.filter(a => a.street === 'turn' && ['bet','raise','call','allin'].includes(a.action));
+      if (turnBets.length > 0) {
+        steps.push({fn() {
+          lightSeat(null); setAction('💫 Fichas al pozo...');
+          collectToPot(potAtRiver, 'POT: ' + fmt(potAtRiver), () => { showPotChips(potAtRiver, 'POT: ' + fmt(potAtRiver)); setPot('POT: ' + fmt(potAtRiver)); });
+        }});
+      }
+      steps.push({fn() {
+        lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: ' + fmt(potAtRiver)); showPotChips(potAtRiver, 'POT: ' + fmt(potAtRiver));
+        showBoardCard('bc5', 0);
+        setAction('🂠 River: ' + hd.board.river.rank + hd.board.river.suitSymbol);
+      }});
+    }
 
     streetActions.forEach(act => {
-      const p=act.player, lbl='lbl-'+p, isHero=p===heroPosition, name=isHero?'Hero':p.toUpperCase();
-      switch(act.action) {
+      const p = act.player;
+      const lbl = 'lbl-' + p;
+      const isHero = p === heroPosition;
+      const name = isHero ? 'Hero' : p.toUpperCase();
+
+      // Skip bulk-folded preflop players
+      if (street === 'preflop' && act.action === 'fold') {
+        const preflopActs = hd.actions.filter(a=>a.street==='preflop');
+        const bulkFolders = [];
+        for (const a of preflopActs) { if(a.action==='fold') bulkFolders.push(a.player); else break; }
+        if (bulkFolders.includes(p)) return;
+      }
+
+      switch (act.action) {
         case 'fold':
-          if (street === 'preflop') {
-            const pActs = hd.actions.filter(a=>a.street==='preflop');
-            const bFolders = [];
-            for (const a of pActs) { if(a.action==='fold') bFolders.push(a.player); else break; }
-            if (bFolders.includes(p)) break;
-          }
-          steps.push({fn(){ lightSeat(lbl); if(street==='preflop'&&$('chips-'+p))hideChips(p); setAction('❌ '+name+' fold'); foldSeat(p); }}); break;
+          steps.push({fn() {
+            lightSeat(lbl);
+            if (street === 'preflop' && $('chips-'+p)) hideChips(p);
+            setAction('❌ ' + name + ' fold');
+            foldSeat(p);
+          }});
+          break;
         case 'check':
-          steps.push({fn(){ lightSeat(lbl); hideAllChecks(); showCheck(p); setAction('✋ '+name+' check'); }}); break;
-        case 'call': case 'limp': {
-          const rawAmt=act.amount||0;
-          const actName=act.action==='limp'?'limp':'call';
-          // Auto-correct: if reported amount > current street bet, use streetMaxBet
-          const amt = (streetMaxBet > 0 && rawAmt > streetMaxBet) ? streetMaxBet : rawAmt;
-          steps.push({fn(){
+          steps.push({fn() {
             lightSeat(lbl); hideAllChecks();
-            if(amt>0){
-              const alreadyIn = runtimeInvested[p]||0;
-              const toAdd = Math.max(0, amt - alreadyIn);
-              showChips(p, amt, fmt(amt), actName);
-              runtimeInvested[p] = amt;
-              stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd;
+            showCheck(p);
+            setAction('✋ ' + name + ' check');
+          }});
+          break;
+        case 'call': {
+          const callAmt = act.amount || 0;
+          const callAlreadyIn = invested[p] || 0;
+          const callToAdd = Math.max(0, callAmt - callAlreadyIn);
+          invested[p] = callAmt;
+          pot += callToAdd;
+          const potNow = pot;
+          steps.push({fn() {
+            lightSeat(lbl); hideAllChecks();
+            if (callAmt > 0) {
+              showChips(p, callAmt, fmt(callAmt), 'call');
+              if (callToAdd > 0) { stacks[p] -= callToAdd; setStack(p, stacks[p]); }
             }
-            setPot('POT: '+fmt(runtimePot)); setAction('✅ '+name+' '+actName+' '+fmt(amt));
-          }}); break; }
-        case 'bet': case 'raise': case 'donk': {
-          const amt=act.amount||0, albl=act.action==='raise'?'raise':'bet';
-          streetMaxBet = amt; // track the current bet level
-          steps.push({fn(){
-            lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt),albl);
-            const alreadyIn = runtimeInvested[p]||0;
-            const toAdd = Math.max(0, amt - alreadyIn);
-            runtimeInvested[p] = amt;
-            stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd; setPot('POT: '+fmt(runtimePot));
-            setAction((act.action==='raise'?'📢':'💰')+' '+name+' '+act.action+' '+fmt(amt));
-          }}); break; }
+            setPot('POT: ' + fmt(potNow));
+            setAction('✅ ' + name + ' call ' + fmt(callAmt));
+          }});
+          break;
+        }
+        case 'limp': {
+          const limpAmt = act.amount || hd.blinds.bb;
+          pot += limpAmt;
+          const potNow = pot;
+          steps.push({fn() {
+            lightSeat(lbl); hideAllChecks();
+            showChips(p, limpAmt, fmt(limpAmt), 'call');
+            stacks[p] -= limpAmt; setStack(p, stacks[p]);
+            setPot('POT: ' + fmt(potNow));
+            setAction('✅ ' + name + ' limp ' + fmt(limpAmt));
+          }});
+          break;
+        }
+        case 'bet':
+        case 'raise':
+        case 'donk': {
+          const betAmt = act.amount || 0;
+          const actLabel = act.action === 'raise' ? 'raise' : 'bet';
+          const betAlreadyIn = invested[p] || 0;
+          const betToAdd = Math.max(0, betAmt - betAlreadyIn);
+          invested[p] = betAmt;
+          pot += betToAdd;
+          const potNow = pot;
+          steps.push({fn() {
+            lightSeat(lbl); hideAllChecks();
+            showChips(p, betAmt, fmt(betAmt), actLabel);
+            stacks[p] -= betToAdd; setStack(p, stacks[p]);
+            setPot('POT: ' + fmt(potNow));
+            const emoji = act.action === 'raise' ? '📢' : '💰';
+            setAction(emoji + ' ' + name + ' ' + act.action + ' ' + fmt(betAmt));
+          }});
+          break;
+        }
         case 'allin': {
-          const amt=act.amount||stacks[p];
-          steps.push({fn(){
-            lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt)+' ALL-IN','allin');
-            const alreadyIn = runtimeInvested[p]||0;
-            const toAdd = Math.max(0, amt - alreadyIn);
-            runtimeInvested[p] = amt;
-            stacks[p] = 0; setStack(p,0); runtimePot += toAdd; setPot('POT: '+fmt(runtimePot));
-            setAction('🔥 '+name+' ALL-IN '+fmt(amt)+'!');
-          }}); break; }
+          const allAmt = act.amount || stacks[p];
+          const allAlreadyIn = invested[p] || 0;
+          const allToAdd = Math.max(0, allAmt - allAlreadyIn);
+          invested[p] = allAmt;
+          pot += allToAdd;
+          const potNow = pot;
+          steps.push({fn() {
+            lightSeat(lbl); hideAllChecks();
+            showChips(p, allAmt, fmt(allAmt) + ' ALL-IN', 'allin');
+            stacks[p] = 0; setStack(p, 0);
+            setPot('POT: ' + fmt(potNow));
+            setAction('🔥 ' + name + ' ALL-IN ' + fmt(allAmt) + '!');
+          }});
+          break;
+        }
       }
     });
   });
 
   // SHOWDOWN
   if (hd.showdown && hd.winner) {
-    const winnerPos=hd.winner;
-    const allFoldsSD=new Set(); hd.actions.filter(a=>a.action==='fold').forEach(a=>allFoldsSD.add(a.player));
-    const villainPos = winnerPos!==heroPosition ? winnerPos : ALL_POSITIONS.find(p=>p!==heroPosition&&!allFoldsSD.has(p))||activePlayers.find(p=>p!==heroPosition);
-    steps.push({fn(){
+    const winnerPos = hd.winner;
+    const allFoldsSD = new Set();
+    hd.actions.filter(a => a.action === 'fold').forEach(a => allFoldsSD.add(a.player));
+    const villainPos = winnerPos !== heroPosition ? winnerPos : ALL_POSITIONS.find(p=>p!==heroPosition&&!allFoldsSD.has(p)) || activePlayers.find(p=>p!==heroPosition);
+    const potFinal = pot;
+    steps.push({fn() {
       lightSeat(null); setAction('💫 Fichas al pozo...');
-      collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{
-        setPot('POT: '+fmt(runtimePot));
-        if(hd.villainCards&&villainPos){
-          setTimeout(()=>{
-            revealCards(villainPos,()=>{
-              const vc=hd.villainCards;
-              setAction('🃏 '+villainPos.toUpperCase()+' muestra '+vc[0].rank+vc[0].suitSymbol+vc[1].rank+vc[1].suitSymbol+' — '+winnerPos.toUpperCase()+' gana 🏆');
-              setTimeout(()=>collectToWinner(winnerPos,pot,()=>{ setAction('💰 '+winnerPos.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),1000);
+      collectToPot(potFinal, 'POT: ' + fmt(potFinal), () => {
+        setPot('POT: ' + fmt(potFinal));
+        if (hd.villainCards && villainPos) {
+          setTimeout(() => {
+            revealCards(villainPos, () => {
+              const vc = hd.villainCards;
+              setAction('🃏 ' + villainPos.toUpperCase() + ' muestra ' + vc[0].rank+vc[0].suitSymbol+vc[1].rank+vc[1].suitSymbol + ' — ' + winnerPos.toUpperCase() + ' gana 🏆');
+              setTimeout(() => {
+                collectToWinner(winnerPos, potFinal, () => {
+                  setAction('💰 ' + winnerPos.toUpperCase() + ' cobra ' + fmt(potFinal));
+                  setTimeout(() => $('questionBox').classList.add('show'), 800);
+                });
+              }, 1000);
             });
-          },600);
+          }, 600);
         } else {
-          setTimeout(()=>collectToWinner(winnerPos,pot,()=>{ setAction('💰 '+winnerPos.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600);
+          setTimeout(() => {
+            collectToWinner(winnerPos, potFinal, () => {
+              setAction('💰 ' + winnerPos.toUpperCase() + ' cobra ' + fmt(potFinal));
+              setTimeout(() => $('questionBox').classList.add('show'), 800);
+            });
+          }, 600);
         }
       });
     }});
   } else if (hd.winner) {
-    steps.push({fn(){
+    const potFinal = pot;
+    steps.push({fn() {
       lightSeat(null);
-      setTimeout(()=>collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{ setPot('POT: '+fmt(runtimePot)); setTimeout(()=>collectToWinner(hd.winner,pot,()=>{ setAction('💰 '+hd.winner.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600); }),400);
+      setTimeout(() => {
+        collectToPot(potFinal, 'POT: ' + fmt(potFinal), () => {
+          setPot('POT: ' + fmt(potFinal));
+          setTimeout(() => {
+            collectToWinner(hd.winner, potFinal, () => {
+              setAction('💰 ' + hd.winner.toUpperCase() + ' cobra ' + fmt(potFinal));
+              setTimeout(() => $('questionBox').classList.add('show'), 800);
+            });
+          }, 600);
+        });
+      }, 400);
     }});
   }
 }
@@ -1118,7 +1219,7 @@ function hideCheck(pos){const el=$('check-'+pos);if(el)el.classList.remove('show
 function hideAllChecks(){ALL_POSITIONS.forEach(p=>hideCheck(p));}
 function foldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.add('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el){el.classList.add('folded');el.style.opacity='0.15';}});}
 function unfoldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.remove('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el){el.classList.remove('folded');if(el.style.opacity==='0.15')el.style.opacity='1';}});}
-function unfadeAll(){for(let i=0;i<5;i++)$('seat-'+i).classList.remove('faded');ALL_POSITIONS.forEach(p=>unfoldSeat(p));}
+function unfadeAll(){for(let i=0;i<8;i++)$('seat-'+i).classList.remove('faded');ALL_POSITIONS.forEach(p=>unfoldSeat(p));}
 
 function revealCards(seat,cb){
   [seat+'-0',seat+'-1'].forEach((slotId,i)=>{
@@ -1195,7 +1296,7 @@ function flyAnteToCenter(cb){
 // DEALER BUTTON
 function positionDealerBtn(){
   const btnPos=seatMap.indexOf('btn');
-  const btnSeat=$('seat-'+btnPos);if(!btnSeat||btnPos>=5)return;
+  const btnSeat=$('seat-'+btnPos);if(!btnSeat||btnPos>=8)return;
   const tableRect=$('table').getBoundingClientRect();
   const db=$('dealerBtn');
   if(btnPos===0){
@@ -1245,7 +1346,7 @@ function dealNext(){
   const slotId=dealOrder[dealIndex];
   const seat=slotId.split('-')[0];
   const seatSlot=seatMap.indexOf(seat);
-  if(seatSlot>=5){dealIndex++;dealNext();return;} // skip hidden seats
+  if(seatSlot>=8){dealIndex++;dealNext();return;}
   lightSeat('lbl-'+seat);
   setAction('🃏 Ronda '+(dealIndex<8?1:2)+' → '+seat.toUpperCase());
   animateDeal(slotId,()=>{dealIndex++;setTimeout(dealNext,140);});
@@ -1278,19 +1379,19 @@ function postBlindsAndDeal(){
     showChips('bb',bb,fmt(bb),'blind');setStack('bb',handData.effectiveStack-bb);
     setAction('🪙 BB pone ciega '+fmt(bb));
     stacks['sb']=handData.effectiveStack-sb;stacks['bb']=handData.effectiveStack-bb;
-    runtimeInvested['bb']=bb;
+
     if(ante>0){
       setTimeout(()=>{
         stacks['bb']-=ante;setStack('bb',stacks['bb']);
         setAction('🪙 BB pone ante '+fmt(ante));
         flyAnteToCenter(()=>{
-          runtimePot=sb+bb+ante;setPot('POT: '+fmt(runtimePot));setPot('POT: '+fmt(runtimePot),true);
+          setPot('POT: '+fmt(sb+bb+ante));setPot('POT: '+fmt(sb+bb+ante),true);
           lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
         });
       },1000);
     } else {
       setTimeout(()=>{
-        runtimePot=sb+bb;setPot('POT: '+fmt(runtimePot));setPot('POT: '+fmt(runtimePot),true);
+        setPot('POT: '+fmt(sb+bb));setPot('POT: '+fmt(sb+bb),true);
         lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
       },1000);
     }
@@ -1315,7 +1416,6 @@ function hardReset(){
   $('progressFill').style.width='0%';
   document.querySelectorAll('.flying-card,.flying-chip').forEach(e=>e.remove());
   runtimeInvested = {}; ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0);
-  runtimePot = handData.blinds.sb + handData.blinds.bb + (handData.ante||0);
   buildSteps(handData);
   setTimeout(postBlindsAndDeal,400);
 }
