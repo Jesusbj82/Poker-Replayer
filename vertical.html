@@ -988,10 +988,8 @@ function buildSteps(hd) {
     }
 
     if (street==='flop') {
-      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte(); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('FLOP'); setPot('POT: '+fmt(runtimePot));
-        // Update pot chip zone to show correct pot
-        if($('potChipZone').classList.contains('show')) showPotChips(runtimePot,'POT: '+fmt(runtimePot));
+      // Collect preflop bets — added at end of preflop processing above
+      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('FLOP'); setPot('POT: '+fmt(runtimePot)); showPotChips(runtimePot,'POT: '+fmt(runtimePot));
         seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)){ $('seat-'+si).classList.add('faded'); foldSeat(pos); } });
         showBoardCard('bc1',0); showBoardCard('bc2',140); showBoardCard('bc3',280);
         setAction('🂠 Flop: '+hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  ')); }});
@@ -1005,6 +1003,9 @@ function buildSteps(hd) {
       if (turnBets.length>0) steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
       steps.push({fn(){ lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: '+fmt(runtimePot)); showBoardCard('bc5',0); setAction('🂠 River: '+hd.board.river.rank+hd.board.river.suitSymbol); }});
     }
+
+    // Track if this street had real bets for collect logic
+    const streetBets = streetActions.filter(a=>['bet','raise','call','allin','limp'].includes(a.action));
 
     streetActions.forEach(act => {
       const p=act.player, lbl='lbl-'+p, isHero=p===heroPosition, name=isHero?'Hero':p.toUpperCase();
