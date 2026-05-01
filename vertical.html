@@ -957,6 +957,9 @@ function buildSteps(hd) {
   steps = [];
   const streets = ['preflop','flop','turn','river'];
   // Track per-street investment to calculate correct pot additions
+  // Also track current bet level to auto-correct over-reported call amounts
+  const currentBet = {};
+  let streetMaxBet = 0;
 
   streets.forEach(street => {
     const streetActions = hd.actions.filter(a=>a.street===street);
@@ -1007,14 +1010,15 @@ function buildSteps(hd) {
         case 'check':
           steps.push({fn(){ lightSeat(lbl); hideAllChecks(); showCheck(p); setAction('✋ '+name+' check'); }}); break;
         case 'call': case 'limp': {
-          const amt=act.amount||0;
+          const rawAmt=act.amount||0;
           const actName=act.action==='limp'?'limp':'call';
+          // Auto-correct: if reported amount > current street bet, use streetMaxBet
+          const amt = (streetMaxBet > 0 && rawAmt > streetMaxBet) ? streetMaxBet : rawAmt;
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks();
             if(amt>0){
               const alreadyIn = runtimeInvested[p]||0;
               const toAdd = Math.max(0, amt - alreadyIn);
-              // Show TOTAL call amount on chips, only add DIFFERENCE to pot
               showChips(p, amt, fmt(amt), actName);
               runtimeInvested[p] = amt;
               stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd;
@@ -1023,6 +1027,7 @@ function buildSteps(hd) {
           }}); break; }
         case 'bet': case 'raise': case 'donk': {
           const amt=act.amount||0, albl=act.action==='raise'?'raise':'bet';
+          streetMaxBet = amt; // track the current bet level
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt),albl);
             const alreadyIn = runtimeInvested[p]||0;
