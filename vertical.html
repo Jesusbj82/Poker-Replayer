@@ -789,12 +789,22 @@ CRITICAL POT NOTATION:
   - Hero 3bets to 120 (amount=120)  
   - SB 4bets to 375 (amount=375)
   - CO folds
-  - "yo pago 800" = Hero CALLS 375, pot becomes 800. Call amount = 375, NOT 800
-- The number after "pago/paga" at the END of a sequence = resulting pot, not call size
-- To find call amount: it equals the last raise amount (375 in example above)
-- Example: "cb 150 pago 1100" = villain bets 150, Hero calls 150, pot becomes 1100
-  - bet action: amount=150
-  - call action: amount=150 (NOT 1100, that's the pot)
+  - "yo pago 800" = Hero CALLS, pot becomes 800. Call amount = last raise amount (375). Use 375 NOT 800.
+- The number after "pago/paga" at the END of a sequence = resulting pot, NOT the call size
+- To find call amount: ALWAYS use the last raise/bet amount, never the pot number
+- Example: "Or CO 40 yo en D 120 SB raise 375 CO foldea y yo pago 800"
+  - CO opens: amount=40
+  - Hero 3bet: amount=120
+  - SB 4bet: amount=375
+  - CO fold
+  - Hero call: amount=375 (matches SB's raise, NOT 800 which is the pot)
+- Example: "cb 150 pago 1100" = villain bets 150, Hero calls 150, pot=1100
+  - bet: amount=150
+  - call: amount=150 (NOT 1100)
+- Example: "bet 200 pago 1500" = villain bets 200, Hero calls 200, pot=1500
+  - bet: amount=200
+  - call: amount=200 (NOT 1500)
+- RULE: call amount ALWAYS equals the bet/raise being called, never the resulting pot
 
 Include ALL folds from non-participating players.
 OOP acts first post-flop.`;
@@ -1002,10 +1012,10 @@ function buildSteps(hd) {
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks();
             if(amt>0){
-              showChips(p,amt,fmt(amt),actName);
-              // Only add the difference between call amount and what's already invested
               const alreadyIn = runtimeInvested[p]||0;
               const toAdd = Math.max(0, amt - alreadyIn);
+              // Show TOTAL call amount on chips, only add DIFFERENCE to pot
+              showChips(p, amt, fmt(amt), actName);
               runtimeInvested[p] = amt;
               stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd;
             }
