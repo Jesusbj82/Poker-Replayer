@@ -775,12 +775,26 @@ HERO IDENTIFICATION:
 POSITION SHORTCUTS:
 - "D" = BTN (Dealer)
 - "Or X" = open raise to X from that position
-- "pago" = call
-- "paga" = call  
-- "raise" or "sube" = raise
-- "cb" = continuation bet (preflop aggressor bets)
-- "xx" = both players check
+- "pago" / "paga" / "llamo" = call
+- "raise" / "sube" / "reraisa" = raise
+- "cb" = continuation bet (preflop aggressor bets postflop)
+- "xx" = both players check (add check for both active players)
 - "tiene" = villain shows cards at showdown
+
+CRITICAL POT NOTATION:
+- Numbers after actions often represent the RESULTING POT, not the action amount
+- Format: "action amount POT_RESULT" e.g. "yo pago 800" means Hero calls and pot becomes 800
+- Example: "Or CO 40 yo en D 120 SB raise 375 CO foldea y yo pago 800"
+  - CO opens 40 (amount=40)
+  - Hero 3bets to 120 (amount=120)  
+  - SB 4bets to 375 (amount=375)
+  - CO folds
+  - "yo pago 800" = Hero CALLS 375, pot becomes 800. Call amount = 375, NOT 800
+- The number after "pago/paga" at the END of a sequence = resulting pot, not call size
+- To find call amount: it equals the last raise amount (375 in example above)
+- Example: "cb 150 pago 1100" = villain bets 150, Hero calls 150, pot becomes 1100
+  - bet action: amount=150
+  - call action: amount=150 (NOT 1100, that's the pot)
 
 Include ALL folds from non-participating players.
 OOP acts first post-flop.`;
