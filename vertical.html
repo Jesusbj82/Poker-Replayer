@@ -779,7 +779,15 @@ POSITION SHORTCUTS:
 - "raise" / "sube" / "reraisa" = raise
 - "cb" = continuation bet (preflop aggressor bets postflop)
 - "xx" = both players check (add check for both active players)
-- "tiene" = villain shows cards at showdown
+- "tiene" = villain shows cards at showdown — the player who "tiene" (has) cards shown is the VILLAIN
+- If villain shows cards and has a better hand, villain = winner
+- "tiene AK" on a board with K = villain hit top pair = villain WINS
+- "xx tiene AK" = both check, villain shows AK = villain wins
+- WINNER RULE: 
+  - If Hero says "tiene [hand]" about villain → villain wins, set winner = villain's position
+  - If Hero wins at showdown → set winner = heroPosition
+  - If hand ends with fold → winner = last player who didn't fold
+- Always set showdown: true when cards are shown at river
 
 CRITICAL POT NOTATION:
 - Numbers after actions often represent the RESULTING POT, not the action amount
@@ -982,6 +990,8 @@ function buildSteps(hd) {
     if (street==='flop') {
       steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte(); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
       steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('FLOP'); setPot('POT: '+fmt(runtimePot));
+        // Update pot chip zone to show correct pot
+        if($('potChipZone').classList.contains('show')) showPotChips(runtimePot,'POT: '+fmt(runtimePot));
         seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)){ $('seat-'+si).classList.add('faded'); foldSeat(pos); } });
         showBoardCard('bc1',0); showBoardCard('bc2',140); showBoardCard('bc3',280);
         setAction('🂠 Flop: '+hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  ')); }});
@@ -1139,7 +1149,14 @@ function collectToPot(potAmount,label,cb){
   hideAllChips();
   if(totalFlying===0){showPotChips(potAmount,label);if(cb)setTimeout(cb,300);}
 }
-function showPotChips(amount,label){const zone=$('potChipZone'),stack=$('potChipStack'),lbl=$('potChipLabel');stack.innerHTML='';buildChips(amount).forEach(cls=>{const c=document.createElement('div');c.className='chip '+cls;stack.appendChild(c);});lbl.textContent=label||('POT: '+fmt(amount));zone.classList.add('show');}
+function showPotChips(amount,label){
+  const zone=$('potChipZone'),stack=$('potChipStack'),lbl=$('potChipLabel');
+  // Clear and rebuild chip stack with new amount
+  stack.innerHTML='';
+  buildChips(amount).forEach(cls=>{const c=document.createElement('div');c.className='chip '+cls;stack.appendChild(c);});
+  lbl.textContent=label||('POT: '+fmt(amount));
+  zone.classList.add('show');
+}
 function hidePotChips(){$('potChipZone').classList.remove('show');$('potChipStack').innerHTML='';$('potChipLabel').textContent='';}
 
 function collectToWinner(winnerSeat,potAmount,cb){
