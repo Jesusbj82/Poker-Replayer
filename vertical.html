@@ -759,6 +759,29 @@ OUTPUT FORMAT:
 {"gameType":"cash","blinds":{"sb":5,"bb":10},"ante":0,"effectiveStack":2000,"playerStacks":null,"heroPosition":"hj","heroCards":[{"rank":"Q","suit":"s","suitSymbol":"♠","color":"black"},{"rank":"8","suit":"s","suitSymbol":"♠","color":"black"}],"villainCards":null,"board":{"flop":null,"turn":null,"river":null},"actions":[{"street":"preflop","player":"utg","action":"fold"}],"winner":null,"showdown":false,"question":"","bounties":null}
 
 Suits: s=♠(black), c=♣(black), h=♥(red), d=♦(red)
+CRITICAL FOLD RULE:
+- If a player is NOT mentioned in any street's actions, they FOLDED preflop.
+- You MUST explicitly add fold actions for ALL positions not mentioned.
+- ALWAYS include all 8 positions in the actions array — either with their real action or with fold.
+
+HERO IDENTIFICATION:
+- "yo" = Hero (the player telling the story)
+- "en D" or "D" alone = BTN (Dealer button position)
+- "yo en D" = Hero is at BTN
+- "Or CO 40 yo en D 120" = CO opens 40, Hero (BTN) 3bets to 120
+- The heroPosition must match where "yo" is sitting
+- Never confuse the opener's position with Hero's position
+
+POSITION SHORTCUTS:
+- "D" = BTN (Dealer)
+- "Or X" = open raise to X from that position
+- "pago" = call
+- "paga" = call  
+- "raise" or "sube" = raise
+- "cb" = continuation bet (preflop aggressor bets)
+- "xx" = both players check
+- "tiene" = villain shows cards at showdown
+
 Include ALL folds from non-participating players.
 OOP acts first post-flop.`;
 
@@ -777,7 +800,7 @@ OOP acts first post-flop.`;
 // ══════════════════════════════════════════
 // REPLAY ENGINE
 // ══════════════════════════════════════════
-let handData, seatMap, heroPosition, activePlayers, stacks, cardDefs;
+let handData, seatMap, heroPosition, activePlayers, stacks, cardDefs, runtimeInvested = {}, runtimePot = 0;
 let phase, dealIndex, stepIndex, playing, autoTimer, steps;
 const STEP_DELAY = 2400;
 function fmt(n){ return typeof n==='number' ? n.toLocaleString() : n; }
@@ -898,6 +921,8 @@ function initReplay(hd) {
   stacks = {};
   ALL_POSITIONS.forEach(p => stacks[p] = (hd.playerStacks&&hd.playerStacks[p]) || hd.effectiveStack);
 
+  runtimeInvested = {}; ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0);
+  runtimePot = hd.blinds.sb + hd.blinds.bb + (hd.ante||0);
   buildSteps(hd);
   phase='blinds'; dealIndex=0; stepIndex=0; playing=false;
   setTimeout(postBlindsAndDeal, 500);
@@ -906,37 +931,54 @@ function initReplay(hd) {
 // ══ STEP BUILDER ══
 function buildSteps(hd) {
   steps = [];
-  let pot = hd.blinds.sb + hd.blinds.bb + (hd.ante||0);
-  const invested = {}; ALL_POSITIONS.forEach(p=>invested[p]=0);
   const streets = ['preflop','flop','turn','river'];
+  // Track per-street investment to calculate correct pot additions
 
   streets.forEach(street => {
     const streetActions = hd.actions.filter(a=>a.street===street);
     if (streetActions.length===0) return;
 
-    if (street==='preflop') steps.push({fn(){setStreet('PREFLOP');}});
+    if (street==='preflop') {
+      steps.push({fn(){setStreet('PREFLOP');}});
+      const preflopActs = hd.actions.filter(a=>a.street==='preflop');
+      const bulkFolders = [];
+      for (const act of preflopActs) { if(act.action==='fold') bulkFolders.push(act.player); else break; }
+      if (bulkFolders.length > 0) {
+        steps.push({fn(){
+          lightSeat(null);
+          bulkFolders.forEach(p => foldSeat(p));
+          setAction('❌ ' + bulkFolders.map(p=>p.toUpperCase()).join(' · ') + ' fold');
+        }});
+      }
+    }
 
     if (street==='flop') {
-      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte(); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); setStreet('FLOP'); setPot('POT: '+fmt(pot));
-        seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)) $('seat-'+si).classList.add('faded'); });
+      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); hideAnte(); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('FLOP'); setPot('POT: '+fmt(runtimePot));
+        seatMap.forEach((pos,si)=>{ if(si<5&&!activePlayers.includes(pos)){ $('seat-'+si).classList.add('faded'); foldSeat(pos); } });
         showBoardCard('bc1',0); showBoardCard('bc2',140); showBoardCard('bc3',280);
         setAction('🂠 Flop: '+hd.board.flop.map(c=>c.rank+c.suitSymbol).join('  ')); }});
     }
     if (street==='turn') {
-      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); setStreet('TURN'); setPot('POT: '+fmt(pot)); showBoardCard('bc4',0); setAction('🂠 Turn: '+hd.board.turn.rank+hd.board.turn.suitSymbol); }});
+      steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0); setStreet('TURN'); setPot('POT: '+fmt(runtimePot)); showBoardCard('bc4',0); setAction('🂠 Turn: '+hd.board.turn.rank+hd.board.turn.suitSymbol); }});
     }
     if (street==='river') {
       const turnBets = hd.actions.filter(a=>a.street==='turn'&&['bet','raise','call','allin'].includes(a.action));
-      if (turnBets.length>0) steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(pot,'POT: '+fmt(pot),()=>{setPot('POT: '+fmt(pot));}); }});
-      steps.push({fn(){ lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: '+fmt(pot)); showBoardCard('bc5',0); setAction('🂠 River: '+hd.board.river.rank+hd.board.river.suitSymbol); }});
+      if (turnBets.length>0) steps.push({fn(){ lightSeat(null); setAction('💫 Fichas al pozo...'); collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{setPot('POT: '+fmt(runtimePot));}); }});
+      steps.push({fn(){ lightSeat(null); hideAllChips(); hideAllChecks(); setStreet('RIVER'); setPot('POT: '+fmt(runtimePot)); showBoardCard('bc5',0); setAction('🂠 River: '+hd.board.river.rank+hd.board.river.suitSymbol); }});
     }
 
     streetActions.forEach(act => {
       const p=act.player, lbl='lbl-'+p, isHero=p===heroPosition, name=isHero?'Hero':p.toUpperCase();
       switch(act.action) {
         case 'fold':
+          if (street === 'preflop') {
+            const pActs = hd.actions.filter(a=>a.street==='preflop');
+            const bFolders = [];
+            for (const a of pActs) { if(a.action==='fold') bFolders.push(a.player); else break; }
+            if (bFolders.includes(p)) break;
+          }
           steps.push({fn(){ lightSeat(lbl); if(street==='preflop'&&$('chips-'+p))hideChips(p); setAction('❌ '+name+' fold'); foldSeat(p); }}); break;
         case 'check':
           steps.push({fn(){ lightSeat(lbl); hideAllChecks(); showCheck(p); setAction('✋ '+name+' check'); }}); break;
@@ -945,22 +987,34 @@ function buildSteps(hd) {
           const actName=act.action==='limp'?'limp':'call';
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks();
-            if(amt>0){ showChips(p,amt,fmt(amt),actName); let d=amt; if(street==='preflop'){if(p==='bb')d=amt-hd.blinds.bb;else if(p==='sb')d=amt-hd.blinds.sb;} if(d>0){stacks[p]-=d;setStack(p,stacks[p]);pot+=d;} }
-            setPot('POT: '+fmt(pot)); setAction('✅ '+name+' '+actName+' '+fmt(amt));
+            if(amt>0){
+              showChips(p,amt,fmt(amt),actName);
+              // Only add the difference between call amount and what's already invested
+              const alreadyIn = runtimeInvested[p]||0;
+              const toAdd = Math.max(0, amt - alreadyIn);
+              runtimeInvested[p] = amt;
+              stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd;
+            }
+            setPot('POT: '+fmt(runtimePot)); setAction('✅ '+name+' '+actName+' '+fmt(amt));
           }}); break; }
         case 'bet': case 'raise': case 'donk': {
           const amt=act.amount||0, albl=act.action==='raise'?'raise':'bet';
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt),albl);
-            let d=amt; if(street==='preflop'){if(p==='bb')d=amt-hd.blinds.bb;else if(p==='sb')d=amt-hd.blinds.sb;}
-            stacks[p]-=d; setStack(p,stacks[p]); pot+=d; setPot('POT: '+fmt(pot));
+            const alreadyIn = runtimeInvested[p]||0;
+            const toAdd = Math.max(0, amt - alreadyIn);
+            runtimeInvested[p] = amt;
+            stacks[p] -= toAdd; setStack(p,stacks[p]); runtimePot += toAdd; setPot('POT: '+fmt(runtimePot));
             setAction((act.action==='raise'?'📢':'💰')+' '+name+' '+act.action+' '+fmt(amt));
           }}); break; }
         case 'allin': {
           const amt=act.amount||stacks[p];
           steps.push({fn(){
             lightSeat(lbl); hideAllChecks(); showChips(p,amt,fmt(amt)+' ALL-IN','allin');
-            stacks[p]=0; setStack(p,0); pot+=amt; setPot('POT: '+fmt(pot));
+            const alreadyIn = runtimeInvested[p]||0;
+            const toAdd = Math.max(0, amt - alreadyIn);
+            runtimeInvested[p] = amt;
+            stacks[p] = 0; setStack(p,0); runtimePot += toAdd; setPot('POT: '+fmt(runtimePot));
             setAction('🔥 '+name+' ALL-IN '+fmt(amt)+'!');
           }}); break; }
       }
@@ -974,8 +1028,8 @@ function buildSteps(hd) {
     const villainPos = winnerPos!==heroPosition ? winnerPos : ALL_POSITIONS.find(p=>p!==heroPosition&&!allFoldsSD.has(p))||activePlayers.find(p=>p!==heroPosition);
     steps.push({fn(){
       lightSeat(null); setAction('💫 Fichas al pozo...');
-      collectToPot(pot,'POT: '+fmt(pot),()=>{
-        setPot('POT: '+fmt(pot));
+      collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{
+        setPot('POT: '+fmt(runtimePot));
         if(hd.villainCards&&villainPos){
           setTimeout(()=>{
             revealCards(villainPos,()=>{
@@ -992,7 +1046,7 @@ function buildSteps(hd) {
   } else if (hd.winner) {
     steps.push({fn(){
       lightSeat(null);
-      setTimeout(()=>collectToPot(pot,'POT: '+fmt(pot),()=>{ setPot('POT: '+fmt(pot)); setTimeout(()=>collectToWinner(hd.winner,pot,()=>{ setAction('💰 '+hd.winner.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600); }),400);
+      setTimeout(()=>collectToPot(runtimePot,'POT: '+fmt(runtimePot),()=>{ setPot('POT: '+fmt(runtimePot)); setTimeout(()=>collectToWinner(hd.winner,pot,()=>{ setAction('💰 '+hd.winner.toUpperCase()+' cobra '+fmt(pot)); setTimeout(()=>$('questionBox').classList.add('show'),800); }),600); }),400);
     }});
   }
 }
@@ -1022,8 +1076,8 @@ function updateProgress(i,total){$('progressFill').style.width=((i+1)/total*100)
 function showCheck(pos){const el=$('check-'+pos);if(el)el.classList.add('show');}
 function hideCheck(pos){const el=$('check-'+pos);if(el)el.classList.remove('show');}
 function hideAllChecks(){ALL_POSITIONS.forEach(p=>hideCheck(p));}
-function foldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.add('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el)el.classList.add('folded');});}
-function unfoldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.remove('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el)el.classList.remove('folded');});}
+function foldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.add('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el){el.classList.add('folded');el.style.opacity='0.15';}});}
+function unfoldSeat(pos){const lbl=$('lbl-'+pos);if(lbl)lbl.classList.remove('folded');[pos+'-0',pos+'-1'].forEach(cid=>{const el=$(cid);if(el){el.classList.remove('folded');if(el.style.opacity==='0.15')el.style.opacity='1';}});}
 function unfadeAll(){for(let i=0;i<5;i++)$('seat-'+i).classList.remove('faded');ALL_POSITIONS.forEach(p=>unfoldSeat(p));}
 
 function revealCards(seat,cb){
@@ -1170,24 +1224,26 @@ function postBlindsAndDeal(){
   const sb=handData.blinds.sb,bb=handData.blinds.bb,ante=handData.ante||0;
   lightSeat('lbl-sb');
   showChips('sb',sb,fmt(sb),'blind');setStack('sb',handData.effectiveStack-sb);
+  stacks['sb']=handData.effectiveStack-sb; runtimeInvested['sb']=sb;
   setAction('🪙 SB pone ciega '+fmt(sb));
   setTimeout(()=>{
     lightSeat('lbl-bb');
     showChips('bb',bb,fmt(bb),'blind');setStack('bb',handData.effectiveStack-bb);
     setAction('🪙 BB pone ciega '+fmt(bb));
     stacks['sb']=handData.effectiveStack-sb;stacks['bb']=handData.effectiveStack-bb;
+    runtimeInvested['bb']=bb;
     if(ante>0){
       setTimeout(()=>{
         stacks['bb']-=ante;setStack('bb',stacks['bb']);
         setAction('🪙 BB pone ante '+fmt(ante));
         flyAnteToCenter(()=>{
-          const initPot=sb+bb+ante;setPot('POT: '+fmt(initPot));setPot('POT: '+fmt(initPot),true);
+          runtimePot=sb+bb+ante;setPot('POT: '+fmt(runtimePot));setPot('POT: '+fmt(runtimePot),true);
           lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
         });
       },1000);
     } else {
       setTimeout(()=>{
-        const initPot=sb+bb;setPot('POT: '+fmt(initPot));setPot('POT: '+fmt(initPot),true);
+        runtimePot=sb+bb;setPot('POT: '+fmt(runtimePot));setPot('POT: '+fmt(runtimePot),true);
         lightSeat(null);$('actionBubble').classList.remove('show');phase='dealing';dealNext();
       },1000);
     }
@@ -1211,6 +1267,8 @@ function hardReset(){
   $('questionBox').classList.remove('show');
   $('progressFill').style.width='0%';
   document.querySelectorAll('.flying-card,.flying-chip').forEach(e=>e.remove());
+  runtimeInvested = {}; ALL_POSITIONS.forEach(p=>runtimeInvested[p]=0);
+  runtimePot = handData.blinds.sb + handData.blinds.bb + (handData.ante||0);
   buildSteps(handData);
   setTimeout(postBlindsAndDeal,400);
 }
